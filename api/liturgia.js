@@ -6,23 +6,29 @@ module.exports = async function handler(req, res) {
       return res.status(400).send("Data inválida.");
     }
 
-    const month = date.slice(0, 7);
+    // Transforma:
+    // 2026-09-04
+    // em:
+    // 04/09/2026
+    const [year, month, day] = date.split("/").length === 3
+      ? date.split("/")
+      : date.split("-");
 
     const source =
-      "https://carmosaodomingos.com.br/liturgia" +
-      "?data=" + encodeURIComponent(date) +
-      "&mes=" + encodeURIComponent(month);
+      `https://pocketterco.com.br/liturgia/${day}/${month}/${year}`;
 
     const response = await fetch(source, {
       headers: {
-        "User-Agent": "Mozilla/5.0",
-        "Accept": "text/html,application/xhtml+xml"
+        "User-Agent":
+          "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Safari/604.1",
+        "Accept":
+          "text/html,application/xhtml+xml"
       }
     });
 
     if (!response.ok) {
       throw new Error(
-        "Fonte da liturgia respondeu com HTTP " +
+        "Pocket Terço respondeu com HTTP " +
         response.status
       );
     }
@@ -30,131 +36,244 @@ module.exports = async function handler(req, res) {
     let html = await response.text();
 
     /*
-      Pegamos somente o conteúdo principal da página.
-      Assim não aparecem menu, rodapé e calendário.
+      Retira scripts e elementos que não precisamos.
     */
-    const mainMatch =
-      html.match(/<main[^>]*>([\s\S]*?)<\/main>/i);
+    html = html
+      .replace(
+        /<script\b[^>]*>[\s\S]*?<\/script>/gi,
+        ""
+      )
+      .replace(
+        /<iframe\b[^>]*>[\s\S]*?<\/iframe>/gi,
+        ""
+      )
+      .replace(
+        /<button\b[^>]*>[\s\S]*?<\/button>/gi,
+        ""
+      );
 
-    if (mainMatch) {
-      html = mainMatch[1];
+    /*
+      Procuramos o começo da Liturgia da Palavra.
+    */
+    const startPatterns = [
+      "Primeira Leitura",
+      "Leitura —",
+      "Leitura -"
+    ];
+
+    let start = -1;
+
+    for (const pattern of startPatterns) {
+      const index = html.indexOf(pattern);
+
+      if (index !== -1) {
+        start = index;
+        break;
+      }
     }
 
     /*
-      Remove scripts para deixar a visualização
-      mais simples e segura dentro do aplicativo.
+      Terminamos antes da parte da Liturgia
+      Eucarística / comentários do site.
     */
-    html = html.replace(
-      /<script\b[^>]*>[\s\S]*?<\/script>/gi,
-      ""
-    );
+    const endPatterns = [
+      "Antífona do Ofertório",
+      "Sobre as Oferendas",
+      "Homilia do dia",
+      "Santo do dia"
+    ];
+
+    let end = -1;
+
+    for (const pattern of endPatterns) {
+      const index = html.indexOf(pattern, start);
+
+      if (index !== -1) {
+        if (end === -1 || index < end) {
+          end = index;
+        }
+      }
+    }
+
+    if (start === -1) {
+      throw new Error(
+        "Não foi possível localizar a Primeira Leitura."
+      );
+    }
 
     /*
-      Tenta remover a parte do calendário,
-      caso ela esteja dentro do <main>.
+      Voltamos um pouco no HTML para tentar preservar
+      a tag que contém o título Primeira Leitura.
     */
-    const calendarIndex =
-      html.search(/Calendário litúrgico/i);
+    const tagStart = html.lastIndexOf("<", start);
 
-    if (calendarIndex !== -1) {
-      html = html.slice(0, calendarIndex);
+    start = tagStart !== -1
+      ? tagStart
+      : start;
+
+    if (end === -1) {
+      end = html.length;
+    } else {
+      const tagEnd = html.lastIndexOf("<", end);
+
+      if (tagEnd !== -1) {
+        end = tagEnd;
+      }
     }
+
+    let liturgia = html.slice(start, end);
+
+    /*
+      Remove imagens, vídeos e elementos acessórios.
+      Queremos somente o texto para treinamento.
+    */
+    liturgia = liturgia
+      .replace(/<img\b[^>]*>/gi, "")
+      .replace(/<video\b[^>]*>[\s\S]*?<\/video>/gi, "")
+      .replace(/<audio\b[^>]*>[\s\S]*?<\/audio>/gi, "")
+      .replace(/<svg\b[^>]*>[\s\S]*?<\/svg>/gi, "");
 
     const page = `
       <!doctype html>
+
       <html lang="pt-BR">
-        <head>
-          <meta charset="utf-8">
 
-          <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1"
-          >
+      <head>
 
-          <style>
-            * {
-              box-sizing: border-box;
-            }
+        <meta charset="utf-8">
 
-            html,
-            body {
-              margin: 0;
-              padding: 0;
-              background: #ffffff;
-            }
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1"
+        >
 
-            body {
-              font-family:
-                -apple-system,
-                BlinkMacSystemFont,
-                "Segoe UI",
-                sans-serif;
+        <base href="https://pocketterco.com.br/">
 
-              color: #292621;
-              line-height: 1.65;
-              padding: 22px;
-            }
+        <style>
 
-            nav,
-            header,
-            footer,
-            button,
-            form {
-              display: none !important;
-            }
+          * {
+            box-sizing: border-box;
+          }
 
-            img {
-              max-width: 100%;
-            }
+          html,
+          body {
+            margin: 0;
+            padding: 0;
+            background: #ffffff;
+          }
 
-            h1,
-            h2,
-            h3 {
-              line-height: 1.25;
-              color: #292621;
-            }
+          body {
+            font-family:
+              -apple-system,
+              BlinkMacSystemFont,
+              "Segoe UI",
+              Arial,
+              sans-serif;
 
-            h1 {
-              font-size: 28px;
-            }
+            color: #292621;
+            line-height: 1.7;
 
-            h2 {
-              font-size: 23px;
-              margin-top: 32px;
-            }
+            padding:
+              12px 18px 30px 18px;
+          }
 
-            h3 {
-              font-size: 20px;
-              margin-top: 26px;
-            }
+          header,
+          nav,
+          footer,
+          aside,
+          form,
+          button,
+          iframe,
+          img,
+          video,
+          audio {
+            display: none !important;
+          }
 
-            p {
-              font-size: 17px;
-            }
+          h1,
+          h2,
+          h3,
+          h4 {
+            color: #292621;
+            line-height: 1.3;
+          }
 
-            a {
-              color: inherit;
-              text-decoration: none;
-            }
-          </style>
-        </head>
+          h1,
+          h2 {
+            font-family:
+              Georgia,
+              "Times New Roman",
+              serif;
 
-        <body>
-          ${html}
+            margin-top: 30px;
+            margin-bottom: 12px;
+          }
 
-          <p
-            style="
-              margin-top:40px;
-              padding-top:18px;
-              border-top:1px solid #ddd;
-              font-size:13px;
-              color:#777;
-            "
-          >
-            Textos sincronizados com a fonte
-            CNBB / Edições CNBB.
-          </p>
-        </body>
+          h1 {
+            font-size: 28px;
+          }
+
+          h2 {
+            font-size: 24px;
+          }
+
+          h3,
+          h4 {
+            font-size: 19px;
+            margin-top: 25px;
+          }
+
+          p,
+          li {
+            font-size: 17px;
+            line-height: 1.75;
+          }
+
+          p {
+            margin:
+              10px 0;
+          }
+
+          a {
+            color: inherit;
+            text-decoration: none;
+            pointer-events: none;
+          }
+
+          sup {
+            font-size: 11px;
+          }
+
+          .fonte-liturgia {
+            margin-top: 38px;
+            padding-top: 16px;
+
+            border-top:
+              1px solid #e4ddd4;
+
+            font-size: 12px;
+
+            line-height: 1.5;
+
+            color: #817970;
+          }
+
+        </style>
+
+      </head>
+
+      <body>
+
+        ${liturgia}
+
+        <div class="fonte-liturgia">
+          Textos litúrgicos © Conferência Nacional
+          dos Bispos do Brasil.
+          Consulta realizada por meio do Pocket Terço.
+        </div>
+
+      </body>
+
       </html>
     `;
 
@@ -176,27 +295,36 @@ module.exports = async function handler(req, res) {
 
     res.status(500).send(`
       <!doctype html>
-      <html lang="pt-BR">
-        <head>
-          <meta charset="utf-8">
-          <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1"
-          >
-        </head>
 
-        <body
-          style="
-            font-family:system-ui;
-            padding:24px;
-            line-height:1.6;
-          "
+      <html lang="pt-BR">
+
+      <head>
+
+        <meta charset="utf-8">
+
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1"
         >
-          <p>
-            Não foi possível carregar
-            a Liturgia do dia.
-          </p>
-        </body>
+
+      </head>
+
+      <body
+        style="
+          font-family:system-ui;
+          padding:24px;
+          color:#554d45;
+          line-height:1.6;
+        "
+      >
+
+        <p>
+          Não foi possível carregar a
+          Liturgia do dia.
+        </p>
+
+      </body>
+
       </html>
     `);
   }
