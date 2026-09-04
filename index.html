@@ -21,7 +21,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
   <link
-    href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700;800&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Montserrat:wght@400;500;600;700&display=swap"
     rel="stylesheet"
   >
 
@@ -32,24 +32,40 @@
     :root {
       --bg: #f7f3ec;
       --card: #fffdf9;
-      --text: #25221f;
-      --muted: #746d64;
+      --text: #29251f;
+      --muted: #7b7269;
       --accent: #765d43;
-      --line: #e9e0d5;
+      --line: #e8ded2;
       --soft: #eee7dd;
+
+      /*
+        Esta cor muda automaticamente
+        de acordo com a liturgia do dia.
+      */
+      --liturgical-color: #b5ada4;
     }
+
 
     * {
       box-sizing: border-box;
     }
 
+
     html {
       scroll-behavior: smooth;
     }
 
+
     body {
       margin: 0;
-      background: var(--bg);
+
+      background:
+        linear-gradient(
+          180deg,
+          #faf7f1 0%,
+          var(--bg) 38%,
+          var(--bg) 100%
+        );
 
       font-family:
         "Montserrat",
@@ -61,16 +77,21 @@
       color: var(--text);
     }
 
+
     .wrap {
       max-width: 720px;
       margin: auto;
-      padding: 22px 16px 44px;
+
+      padding:
+        24px
+        16px
+        48px;
     }
 
 
+
     /* =========================
-       LITURGIA DO DIA
-       MONTSERRAT
+       IDENTIFICAÇÃO DO APP
     ========================= */
 
     .brand {
@@ -80,17 +101,20 @@
         "Montserrat",
         sans-serif;
 
-      font-size: 16px;
+      font-size: 12px;
       font-weight: 600;
 
-      letter-spacing: .16em;
+      letter-spacing: .22em;
 
       text-transform: uppercase;
 
       color: var(--accent);
 
-      margin-top: 8px;
+      margin-top: 5px;
+
+      opacity: .9;
     }
+
 
 
     /* =========================
@@ -99,74 +123,111 @@
 
     .hero {
       text-align: center;
-      padding: 28px 8px 22px;
+
+      padding:
+        29px
+        10px
+        28px;
     }
 
-
-    /* DIA DA SEMANA
-       MONTSERRAT */
 
     .weekday {
       font-family:
         "Montserrat",
         sans-serif;
 
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
 
-      letter-spacing: .15em;
+      letter-spacing: .19em;
+
+      text-transform: uppercase;
 
       color: var(--muted);
     }
 
 
-    /* DATA
-       LEAGUE SPARTAN */
+
+    /* DATA */
 
     .date {
       font-family:
-        "League Spartan",
-        sans-serif;
+        "Cormorant Garamond",
+        Georgia,
+        serif;
 
-      font-size: 35px;
+      font-size: 40px;
       font-weight: 600;
 
-      line-height: 1.15;
+      line-height: 1.05;
 
-      margin: 8px 0 12px;
+      margin:
+        9px
+        0
+        13px;
+
+      color: #26221e;
     }
 
 
-    /* NOME DA CELEBRAÇÃO
-       MONTSERRAT */
+
+    /* CELEBRAÇÃO */
 
     .celebration {
+      max-width: 590px;
+
+      margin:
+        0
+        auto;
+
       font-family:
         "Montserrat",
         sans-serif;
 
-      font-weight: 700;
-      font-size: 17px;
+      font-weight: 600;
 
-      line-height: 1.4;
+      font-size: 16px;
+
+      line-height: 1.5;
+
+      color: #332e29;
     }
 
 
-    /* FESTA · BRANCO
-       MONTSERRAT */
+
+    /* COR / GRAU */
 
     .meta {
-      margin-top: 9px;
+      margin-top: 11px;
+
+      min-height: 20px;
+
+      display: flex;
+
+      justify-content: center;
+      align-items: center;
 
       font-family:
         "Montserrat",
         sans-serif;
 
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 500;
 
       color: var(--muted);
     }
+
+
+    /*
+      A bolinha é criada pelo app.js.
+      Este CSS deixa qualquer span circular
+      mais nítido visualmente.
+    */
+
+    .meta span:first-child {
+      flex-shrink: 0;
+    }
+
 
 
     /* =========================
@@ -177,18 +238,31 @@
       display: grid;
 
       grid-template-columns:
-        1fr 1fr;
+        1fr
+        1fr;
 
-      gap: 8px;
+      gap: 9px;
 
-      margin: 4px 0 14px;
+      margin:
+        2px
+        0
+        17px;
 
       position: sticky;
       top: 0;
 
-      background: var(--bg);
+      background:
+        rgba(247,243,236,.96);
 
-      padding: 8px 0;
+      backdrop-filter:
+        blur(8px);
+
+      -webkit-backdrop-filter:
+        blur(8px);
+
+      padding:
+        9px
+        0;
 
       z-index: 5;
     }
@@ -198,107 +272,21 @@
       text-decoration: none;
       text-align: center;
 
-      padding: 12px;
+      padding:
+        13px
+        10px;
 
-      border-radius: 12px;
+      border-radius: 13px;
 
-      background: var(--soft);
-
-      color: #4a4037;
-
-      font-family:
-        "Montserrat",
-        sans-serif;
-
-      font-size: 13px;
-      font-weight: 700;
-
-      letter-spacing: .04em;
-    }
-
-
-    /* =========================
-       CARDS
-    ========================= */
-
-    .card {
-      background: var(--card);
+      background:
+        var(--soft);
 
       border:
         1px solid
-        var(--line);
+        rgba(118,93,67,.05);
 
-      border-radius: 18px;
-
-      padding: 21px;
-
-      margin: 13px 0;
-
-      box-shadow:
-        0 4px 18px
-        rgba(0,0,0,.035);
-    }
-
-
-    /* LITURGIA DA PALAVRA
-       ORAÇÃO DOS FIÉIS – PRECES
-
-       LEAGUE SPARTAN
-    */
-
-    .card h2 {
-      font-family:
-        "League Spartan",
-        sans-serif;
-
-      font-size: 24px;
-      font-weight: 700;
-
-      letter-spacing: .02em;
-
-      margin: 0 0 15px;
-
-      line-height: 1.2;
-    }
-
-
-    .placeholder {
-      font-family:
-        "Montserrat",
-        sans-serif;
-
-      line-height: 1.65;
-
-      color: #4d463f;
-    }
-
-
-    /* =========================
-       NAVEGAÇÃO
-    ========================= */
-
-    .nav {
-      display: grid;
-
-      grid-template-columns:
-        1fr 1fr 1fr;
-
-      gap: 8px;
-
-      margin-top: 21px;
-    }
-
-
-    .nav button {
-      border:
-        1px solid
-        var(--line);
-
-      background: #fff;
-
-      border-radius: 12px;
-
-      padding: 12px 5px;
+      color:
+        #463d35;
 
       font-family:
         "Montserrat",
@@ -307,14 +295,254 @@
       font-size: 13px;
       font-weight: 600;
 
-      color: var(--text);
-
-      cursor: pointer;
+      transition:
+        transform .15s ease,
+        background .15s ease;
     }
 
 
+    .tabs a:active {
+      transform:
+        scale(.985);
+
+      background:
+        #e8dfd3;
+    }
+
+
+
     /* =========================
-       TEXTO PEQUENO
+       CARDS
+    ========================= */
+
+    .card {
+      position: relative;
+
+      overflow: hidden;
+
+      background:
+        var(--card);
+
+      border:
+        1px solid
+        var(--line);
+
+      border-radius:
+        18px;
+
+      padding:
+        25px
+        22px
+        23px;
+
+      margin:
+        14px
+        0;
+
+      box-shadow:
+        0
+        6px
+        24px
+        rgba(63,51,39,.04);
+    }
+
+
+    /*
+      DETALHE DA COR LITÚRGICA
+    */
+
+    .card::before {
+      content: "";
+
+      position: absolute;
+
+      top: 0;
+      left: 28px;
+      right: 28px;
+
+      height: 3px;
+
+      border-radius:
+        0
+        0
+        5px
+        5px;
+
+      background:
+        var(--liturgical-color);
+
+      opacity: .88;
+    }
+
+
+
+    /* TÍTULOS DOS CARDS */
+
+    .card h2 {
+      font-family:
+        "Cormorant Garamond",
+        Georgia,
+        serif;
+
+      font-size: 27px;
+      font-weight: 700;
+
+      letter-spacing: 0;
+
+      margin:
+        3px
+        0
+        13px;
+
+      line-height: 1.15;
+
+      color:
+        #302a25;
+    }
+
+
+
+    .placeholder {
+      font-family:
+        "Montserrat",
+        sans-serif;
+
+      font-size: 14px;
+
+      line-height: 1.7;
+
+      color:
+        #625b54;
+    }
+
+
+
+    /* =========================
+       CONTEÚDO CARREGADO
+    ========================= */
+
+    #liturgiaLive > p {
+      margin:
+        0
+        0
+        17px !important;
+
+      font-family:
+        "Montserrat",
+        sans-serif;
+
+      font-size:
+        13px;
+
+      line-height:
+        1.65 !important;
+
+      color:
+        var(--muted) !important;
+    }
+
+
+    #prayerStatus {
+      margin-bottom:
+        17px;
+    }
+
+
+
+    /* =========================
+       PDF / LITURGIA
+    ========================= */
+
+    iframe {
+      width:
+        100%;
+
+      height:
+        620px;
+
+      border:
+        1px solid
+        var(--line);
+
+      border-radius:
+        13px;
+
+      background:
+        white;
+
+      box-shadow:
+        inset
+        0
+        0
+        0
+        1px
+        rgba(255,255,255,.4);
+    }
+
+
+
+    /* =========================
+       NAVEGAÇÃO DOS DIAS
+    ========================= */
+
+    .nav {
+      display: grid;
+
+      grid-template-columns:
+        1fr
+        1fr
+        1fr;
+
+      gap:
+        8px;
+
+      margin-top:
+        22px;
+    }
+
+
+    .nav button {
+      border:
+        1px solid
+        var(--line);
+
+      background:
+        rgba(255,253,249,.85);
+
+      border-radius:
+        12px;
+
+      padding:
+        12px
+        5px;
+
+      font-family:
+        "Montserrat",
+        sans-serif;
+
+      font-size:
+        12px;
+
+      font-weight:
+        600;
+
+      color:
+        #514940;
+
+      cursor:
+        pointer;
+    }
+
+
+    .nav button:hover {
+      background:
+        #ffffff;
+    }
+
+
+
+    /* =========================
+       RODAPÉ
     ========================= */
 
     .small {
@@ -322,33 +550,89 @@
         "Montserrat",
         sans-serif;
 
-      font-size: 11px;
+      font-size:
+        10px;
 
-      color: var(--muted);
+      color:
+        #938a81;
 
-      line-height: 1.5;
+      line-height:
+        1.6;
 
-      margin-top: 18px;
+      margin-top:
+        24px;
 
-      text-align: center;
+      text-align:
+        center;
     }
 
 
+
     /* =========================
-       PDF / CONTEÚDO
+       CELULAR
     ========================= */
 
-    iframe {
-      width: 100%;
-      height: 620px;
+    @media (
+      max-width: 520px
+    ) {
 
-      border:
-        1px solid
-        var(--line);
+      .wrap {
+        padding:
+          20px
+          13px
+          40px;
+      }
 
-      border-radius: 12px;
 
-      background: white;
+      .hero {
+        padding:
+          26px
+          5px
+          24px;
+      }
+
+
+      .date {
+        font-size:
+          36px;
+      }
+
+
+      .celebration {
+        font-size:
+          15px;
+      }
+
+
+      .card {
+        padding:
+          23px
+          17px
+          20px;
+      }
+
+
+      .card h2 {
+        font-size:
+          25px;
+      }
+
+
+      .tabs a {
+        font-size:
+          12px;
+      }
+
+
+      .nav button {
+        font-size:
+          11px;
+
+        padding:
+          11px
+          3px;
+      }
+
     }
 
   </style>
@@ -361,22 +645,17 @@
   <div class="wrap">
 
 
-    <!--
-      1. MONTSERRAT
-    -->
+    <!-- IDENTIFICAÇÃO -->
 
     <div class="brand">
-      LITURGIA DO DIA
+      Liturgia do Dia
     </div>
 
 
+
+    <!-- CABEÇALHO -->
+
     <section class="hero">
-
-
-      <!--
-        4. DIA DA SEMANA
-        MONTSERRAT
-      -->
 
       <div
         class="weekday"
@@ -384,21 +663,11 @@
       ></div>
 
 
-      <!--
-        2. DATA
-        LEAGUE SPARTAN
-      -->
-
       <div
         class="date"
         id="date"
       ></div>
 
-
-      <!--
-        3. NOME DA CELEBRAÇÃO
-        MONTSERRAT
-      -->
 
       <div
         class="celebration"
@@ -408,22 +677,12 @@
       </div>
 
 
-      <!--
-        4. FESTA · BRANCO
-        MONTSERRAT
-
-        A bolinha da cor litúrgica
-        continua sendo criada
-        automaticamente pelo app.js.
-      -->
-
       <div
         class="meta"
         id="meta"
       >
         Calendário litúrgico em preparação
       </div>
-
 
     </section>
 
@@ -434,21 +693,18 @@
     <div class="tabs">
 
       <a href="#liturgia">
-        LITURGIA DA PALAVRA
+        Liturgia
       </a>
 
       <a href="#preces">
-        ORAÇÃO DOS FIÉIS - PRECES
+        Preces
       </a>
 
     </div>
 
 
 
-    <!--
-      5. LITURGIA DA PALAVRA
-      LEAGUE SPARTAN
-    -->
+    <!-- LITURGIA -->
 
     <section
       class="card"
@@ -456,7 +712,7 @@
     >
 
       <h2>
-        LITURGIA DA PALAVRA
+        Liturgia da Palavra
       </h2>
 
       <div class="placeholder">
@@ -471,10 +727,7 @@
 
 
 
-    <!--
-      6. ORAÇÃO DOS FIÉIS – PRECES
-      LEAGUE SPARTAN
-    -->
+    <!-- PRECES -->
 
     <section
       class="card"
@@ -482,7 +735,7 @@
     >
 
       <h2>
-        ORAÇÃO DOS FIÉIS – PRECES
+        Oração dos Fiéis
       </h2>
 
       <div
@@ -493,6 +746,7 @@
         o formulário correspondente
         e exibirá aqui o PDF oficial.
       </div>
+
 
       <div
         id="pdfArea"
@@ -514,28 +768,30 @@
         ← Dia anterior
       </button>
 
+
       <button
         type="button"
         id="todayBtn"
       >
-        Dia atual
+        Hoje
       </button>
+
 
       <button
         type="button"
         id="nextBtn"
       >
-        Dia posterior →
+        Próximo dia →
       </button>
 
     </div>
 
 
+
     <div class="small">
 
-      Versão inicial para publicação no Vercel.
-      A integração automática com as fontes oficiais
-      será adicionada na próxima etapa.
+      Liturgia da Palavra com textos litúrgicos brasileiros.
+      Oração dos Fiéis conforme o formulário correspondente ao dia.
 
     </div>
 
@@ -543,7 +799,98 @@
   </div>
 
 
+
+  <!-- APP PRINCIPAL -->
+
   <script src="/app.js"></script>
+
+
+  <!--
+    SINCRONIZA A LINHA DOS CARDS
+    COM A COR DA BOLINHA LITÚRGICA
+  -->
+
+  <script>
+
+    function atualizarCorLiturgica() {
+
+      const meta =
+        document.getElementById("meta");
+
+      if (!meta) return;
+
+
+      /*
+        O primeiro span criado pelo app.js
+        é a bolinha litúrgica.
+      */
+
+      const bolinha =
+        meta.querySelector("span:first-child");
+
+      if (!bolinha) return;
+
+
+      const cor =
+        bolinha.style.background ||
+        bolinha.style.backgroundColor;
+
+
+      if (cor) {
+
+        document.documentElement.style.setProperty(
+          "--liturgical-color",
+          cor
+        );
+
+      }
+
+    }
+
+
+    const meta =
+      document.getElementById("meta");
+
+
+    if (meta) {
+
+      const observer =
+        new MutationObserver(
+          atualizarCorLiturgica
+        );
+
+
+      observer.observe(
+        meta,
+        {
+          childList: true,
+          subtree: true,
+          attributes: true
+        }
+      );
+
+    }
+
+
+    /*
+      Primeira tentativa depois
+      do carregamento da página.
+    */
+
+    window.addEventListener(
+      "load",
+      function() {
+
+        setTimeout(
+          atualizarCorLiturgica,
+          700
+        );
+
+      }
+    );
+
+  </script>
+
 
 </body>
 
