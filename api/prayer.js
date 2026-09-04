@@ -1,59 +1,101 @@
 const { PDFDocument } = require("pdf-lib");
 const pdfParse = require("pdf-parse");
 
-const BASE = "https://liturgia.pt/oracaouniversal";
+const BASE =
+  "https://liturgia.pt/oracaouniversal";
 
 const URLS = {
   ferial: {
-    advento: `${BASE}/ferial/01UnivFerialSNLAdvento.pdf`,
-    natal: `${BASE}/ferial/02UnivFerialSNLNatal.pdf`,
-    quaresma: `${BASE}/ferial/03UnivFerialSNLQuaresma.pdf`,
-    pascal: `${BASE}/ferial/04UnivFerialSNLTempoPascal.pdf`,
-    comumImpar: `${BASE}/ferial/05UnivFerialSNLTCImpar.pdf`,
-    comumPar: `${BASE}/ferial/06UnivFerialSNLTCPar.pdf`,
-    santoral: `${BASE}/ferial/07UnivFerialSNLSantoral.pdf`
+    advento:
+      `${BASE}/ferial/01UnivFerialSNLAdvento.pdf`,
+
+    natal:
+      `${BASE}/ferial/02UnivFerialSNLNatal.pdf`,
+
+    quaresma:
+      `${BASE}/ferial/03UnivFerialSNLQuaresma.pdf`,
+
+    pascal:
+      `${BASE}/ferial/04UnivFerialSNLTempoPascal.pdf`,
+
+    comumImpar:
+      `${BASE}/ferial/05UnivFerialSNLTCImpar.pdf`,
+
+    comumPar:
+      `${BASE}/ferial/06UnivFerialSNLTCPar.pdf`,
+
+    santoral:
+      `${BASE}/ferial/07UnivFerialSNLSantoral.pdf`
   },
 
   domingo: {
     A: {
-      advento: `${BASE}/dominical/01_01_Dom_A_Adv.pdf`,
-      natal: `${BASE}/dominical/01_02_Dom_A_Nat.pdf`,
-      quaresma: `${BASE}/dominical/01_03_Dom_A_Qua.pdf`,
-      pascal: `${BASE}/dominical/01_05_Dom_A_Pas.pdf`,
-      comum: `${BASE}/dominical/01_06_Dom_A_TCom.pdf`,
-      trindade: `${BASE}/dominical/01_07_Dom_A_SSTrindade.pdf`,
-      corpus: `${BASE}/dominical/01_08_Dom_A_CorpoDeus.pdf`,
-      coracao: `${BASE}/dominical/01_09_Dom_A_SCoracaoJesus.pdf`
+      advento:
+        `${BASE}/dominical/01_01_Dom_A_Adv.pdf`,
+      natal:
+        `${BASE}/dominical/01_02_Dom_A_Nat.pdf`,
+      quaresma:
+        `${BASE}/dominical/01_03_Dom_A_Qua.pdf`,
+      pascal:
+        `${BASE}/dominical/01_05_Dom_A_Pas.pdf`,
+      comum:
+        `${BASE}/dominical/01_06_Dom_A_TCom.pdf`
     },
 
     B: {
-      advento: `${BASE}/dominical/02_01_Dom_B_Adv.pdf`,
-      natal: `${BASE}/dominical/02_02_Dom_B_Nat.pdf`,
-      quaresma: `${BASE}/dominical/02_03_Dom_B_Qua.pdf`,
-      pascal: `${BASE}/dominical/02_05_Dom_B_Pas.pdf`,
-      comum: `${BASE}/dominical/02_06_Dom_B_TCom.pdf`,
-      trindade: `${BASE}/dominical/02_07_Dom_B_SSTrindade.pdf`,
-      corpus: `${BASE}/dominical/02_08_Dom_B_CorpoDeus.pdf`,
-      coracao: `${BASE}/dominical/02_09_Dom_B_SCoracaoJesus.pdf`
+      advento:
+        `${BASE}/dominical/02_01_Dom_B_Adv.pdf`,
+      natal:
+        `${BASE}/dominical/02_02_Dom_B_Nat.pdf`,
+      quaresma:
+        `${BASE}/dominical/02_03_Dom_B_Qua.pdf`,
+      pascal:
+        `${BASE}/dominical/02_05_Dom_B_Pas.pdf`,
+      comum:
+        `${BASE}/dominical/02_06_Dom_B_TCom.pdf`
     },
 
     C: {
-      advento: `${BASE}/dominical/03_01_Dom_C_Adv.pdf`,
-      natal: `${BASE}/dominical/03_02_Dom_C_Nat.pdf`,
-      quaresma: `${BASE}/dominical/03_03_Dom_C_Qua.pdf`,
-      pascal: `${BASE}/dominical/03_05_Dom_C_Pas.pdf`,
-      comum: `${BASE}/dominical/03_06_Dom_C_TCom.pdf`,
-      trindade: `${BASE}/dominical/03_07_Dom_C_SSTrindade.pdf`,
-      corpus: `${BASE}/dominical/03_08_Dom_C_CorpoDeus.pdf`,
-      coracao: `${BASE}/dominical/03_09_Dom_C_SCoracaoJesus.pdf`
+      advento:
+        `${BASE}/dominical/03_01_Dom_C_Adv.pdf`,
+      natal:
+        `${BASE}/dominical/03_02_Dom_C_Nat.pdf`,
+      quaresma:
+        `${BASE}/dominical/03_03_Dom_C_Qua.pdf`,
+      pascal:
+        `${BASE}/dominical/03_05_Dom_C_Pas.pdf`,
+      comum:
+        `${BASE}/dominical/03_06_Dom_C_TCom.pdf`
     }
   }
 };
 
 
 /* =========================
-   UTILIDADES
+   TEXTO
 ========================= */
+
+function decodeHtml(text = "") {
+  return String(text)
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#039;/gi, "'")
+    .replace(/&#39;/gi, "'")
+    .replace(/&ordf;/gi, "ª")
+    .replace(/&ordm;/gi, "º")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+
+function stripTags(text = "") {
+  return decodeHtml(
+    String(text)
+      .replace(/<[^>]+>/g, " ")
+  );
+}
+
 
 function normalize(text = "") {
   return String(text)
@@ -65,16 +107,35 @@ function normalize(text = "") {
 }
 
 
+/* =========================
+   DATA
+========================= */
+
 function parseISODate(value) {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || "");
+  const match =
+    /^(\d{4})-(\d{2})-(\d{2})$/
+      .exec(value || "");
 
   if (!match) return null;
 
-  const year = Number(match[1]);
-  const month = Number(match[2]);
-  const day = Number(match[3]);
+  const year =
+    Number(match[1]);
 
-  const date = new Date(Date.UTC(year, month - 1, day, 12));
+  const month =
+    Number(match[2]);
+
+  const day =
+    Number(match[3]);
+
+  const date =
+    new Date(
+      Date.UTC(
+        year,
+        month - 1,
+        day,
+        12
+      )
+    );
 
   if (
     date.getUTCFullYear() !== year ||
@@ -120,99 +181,110 @@ function monthName(date) {
 
 
 /* =========================
-   ANO DOMINICAL A / B / C
+   NÚMEROS ROMANOS
 ========================= */
 
-function firstSundayOfAdvent(year) {
-  const start = new Date(Date.UTC(year, 10, 27, 12));
+function toRoman(number) {
+  const values = [
+    [1000, "M"],
+    [900, "CM"],
+    [500, "D"],
+    [400, "CD"],
+    [100, "C"],
+    [90, "XC"],
+    [50, "L"],
+    [40, "XL"],
+    [10, "X"],
+    [9, "IX"],
+    [5, "V"],
+    [4, "IV"],
+    [1, "I"]
+  ];
 
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(start);
-    d.setUTCDate(start.getUTCDate() + i);
+  let result = "";
+  let n = number;
 
-    if (d.getUTCDay() === 0) {
-      return d;
+  for (const [value, roman] of values) {
+    while (n >= value) {
+      result += roman;
+      n -= value;
     }
   }
 
-  return null;
-}
-
-
-function sundayCycle(date) {
-  const civilYear = date.getUTCFullYear();
-  const advent = firstSundayOfAdvent(civilYear);
-
-  let liturgicalYear = civilYear;
-
-  if (advent && date >= advent) {
-    liturgicalYear = civilYear + 1;
-  }
-
-  const mod = liturgicalYear % 3;
-
-  if (mod === 1) return "A";
-  if (mod === 2) return "B";
-
-  return "C";
+  return result;
 }
 
 
 /* =========================
-   AGENDA LITÚRGICA
+   CALENDÁRIO BRASILEIRO
+   POCKET TERÇO
 ========================= */
 
-async function getAgenda(date) {
-  const year = date.getUTCFullYear();
-  const month = date.getUTCMonth() + 1;
-  const day = date.getUTCDate();
+async function getBrazilianCelebration(date) {
+  const day =
+    String(
+      date.getUTCDate()
+    ).padStart(2, "0");
+
+  const month =
+    String(
+      date.getUTCMonth() + 1
+    ).padStart(2, "0");
+
+  const year =
+    date.getUTCFullYear();
 
   const url =
-    `https://www.liturgia.pt/liturgiadiaria/dia.php?data=${year}-${month}-${day}`;
+    `https://pocketterco.com.br/liturgia/${day}/${month}/${year}`;
 
-  const response = await fetch(url, {
-    headers: {
-      "User-Agent": "Mozilla/5.0"
-    }
-  });
+  const response =
+    await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0"
+      }
+    });
 
   if (!response.ok) {
     throw new Error(
-      `Agenda litúrgica respondeu ${response.status}`
+      `Pocket Terço respondeu ${response.status}`
     );
   }
 
-  const html = await response.text();
+  const html =
+    await response.text();
 
-  return html
-    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "")
-    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "")
-    .replace(/<[^>]+>/g, "\n")
-    .replace(/&nbsp;/gi, " ")
-    .replace(/&amp;/gi, "&")
-    .replace(/&#039;/gi, "'")
-    .replace(/&quot;/gi, '"')
-    .replace(/\n+/g, "\n")
-    .trim();
+  const h1 =
+    html.match(
+      /<h1\b[^>]*>([\s\S]*?)<\/h1>/i
+    );
+
+  if (!h1) {
+    throw new Error(
+      "Não foi possível identificar a celebração brasileira."
+    );
+  }
+
+  return stripTags(h1[1]);
 }
 
 
 /* =========================
-   TEMPO LITÚRGICO
+   CLASSIFICAÇÃO
 ========================= */
 
-function getSeason(agenda) {
-  const text = normalize(agenda);
+function getSeason(celebration) {
+  const text =
+    normalize(celebration);
 
-  if (text.includes("ADVENTO")) {
+  if (
+    text.includes("ADVENTO")
+  ) {
     return "advento";
   }
 
   if (
-    text.includes("TEMPO DO NATAL") ||
-    text.includes("NATAL DO SENHOR") ||
+    text.includes("NATAL") ||
     text.includes("EPIFANIA") ||
-    text.includes("BAPTISMO DO SENHOR") ||
     text.includes("BATISMO DO SENHOR")
   ) {
     return "natal";
@@ -226,8 +298,8 @@ function getSeason(agenda) {
   }
 
   if (
-    text.includes("TEMPO PASCAL") ||
     text.includes("PASCOA") ||
+    text.includes("TEMPO PASCAL") ||
     text.includes("ASCENSAO") ||
     text.includes("PENTECOSTES")
   ) {
@@ -238,26 +310,211 @@ function getSeason(agenda) {
 }
 
 
-function getWeekRoman(agenda) {
-  const text = normalize(agenda);
+function getWeekNumber(
+  celebration
+) {
+  const text =
+    normalize(celebration);
+
+  /*
+    Exemplo brasileiro:
+    2ª feira da 23ª Semana
+    do Tempo Comum
+  */
 
   const match =
-    text.match(/SEMANA\s+([IVXLCDM]+)/);
+    text.match(
+      /(\d+)[ªº]?\s+SEMANA/
+    );
 
-  return match ? match[1] : null;
+  if (!match) {
+    return null;
+  }
+
+  return Number(match[1]);
+}
+
+
+function getSundayNumber(
+  celebration
+) {
+  const text =
+    normalize(celebration);
+
+  /*
+    Exemplo:
+    23º Domingo do Tempo Comum
+  */
+
+  const match =
+    text.match(
+      /(\d+)[ºª]?\s+DOMINGO/
+    );
+
+  if (!match) {
+    return null;
+  }
+
+  return Number(match[1]);
 }
 
 
 /* =========================
-   PDFs
+   É CELEBRAÇÃO PRÓPRIA?
+========================= */
+
+function isProperCelebration(
+  celebration,
+  date
+) {
+  /*
+    DOMINGO TEM PRIORIDADE.
+
+    Portanto um santo comum jamais
+    substitui o domingo.
+  */
+
+  if (
+    date.getUTCDay() === 0
+  ) {
+    return false;
+  }
+
+
+  const text =
+    normalize(celebration);
+
+
+  /*
+    Se o próprio calendário brasileiro
+    diz que é ferial, não usamos Santoral.
+  */
+
+  if (
+    text.includes("SEMANA DO TEMPO COMUM") ||
+    text.includes("SEMANA DO ADVENTO") ||
+    text.includes("SEMANA DA QUARESMA")
+  ) {
+    return false;
+  }
+
+
+  /*
+    Celebrações expressamente apresentadas
+    pelo calendário brasileiro.
+  */
+
+  if (
+    text.includes("FESTA") ||
+    text.includes("SOLENIDADE") ||
+    text.includes("MEMORIA")
+  ) {
+    return true;
+  }
+
+
+  /*
+    Alguns títulos do Pocket Terço podem
+    trazer o nome próprio sem repetir
+    a palavra Festa/Memória.
+  */
+
+  if (
+    text.includes("VIRGEM MARIA") ||
+    text.includes("NOSSA SENHORA") ||
+    text.includes("APOSTOLO") ||
+    text.includes("EVANGELISTA") ||
+    text.includes("MARTIR") ||
+    text.includes("MARTIRES")
+  ) {
+    return true;
+  }
+
+
+  return false;
+}
+
+
+/* =========================
+   ANO A / B / C
+========================= */
+
+function firstSundayOfAdvent(year) {
+  const start =
+    new Date(
+      Date.UTC(
+        year,
+        10,
+        27,
+        12
+      )
+    );
+
+  for (
+    let i = 0;
+    i < 7;
+    i++
+  ) {
+    const date =
+      new Date(start);
+
+    date.setUTCDate(
+      start.getUTCDate() + i
+    );
+
+    if (
+      date.getUTCDay() === 0
+    ) {
+      return date;
+    }
+  }
+
+  return null;
+}
+
+
+function sundayCycle(date) {
+  const civilYear =
+    date.getUTCFullYear();
+
+  const advent =
+    firstSundayOfAdvent(
+      civilYear
+    );
+
+  let liturgicalYear =
+    civilYear;
+
+  if (
+    advent &&
+    date.getTime() >=
+      advent.getTime()
+  ) {
+    liturgicalYear =
+      civilYear + 1;
+  }
+
+  const mod =
+    liturgicalYear % 3;
+
+  if (mod === 1) return "A";
+  if (mod === 2) return "B";
+
+  return "C";
+}
+
+
+/* =========================
+   BAIXAR PDF
 ========================= */
 
 async function fetchPdf(url) {
-  const response = await fetch(url, {
-    headers: {
-      "User-Agent": "Mozilla/5.0"
-    }
-  });
+  const response =
+    await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0"
+      }
+    });
 
   if (!response.ok) {
     throw new Error(
@@ -271,49 +528,86 @@ async function fetchPdf(url) {
 }
 
 
-async function extractPages(buffer) {
+/* =========================
+   EXTRAIR PÁGINAS
+========================= */
+
+async function extractPages(
+  buffer
+) {
   const pages = [];
 
   await pdfParse(buffer, {
-    pagerender: async pageData => {
-      const content =
-        await pageData.getTextContent();
+    pagerender:
+      async function(pageData) {
 
-      const text =
-        content.items
-          .map(item => item.str)
-          .join(" ");
+        const pageNumber =
+          pageData.pageIndex + 1;
 
-      pages.push(text);
+        const content =
+          await pageData.getTextContent();
 
-      return text;
-    }
+        const text =
+          content.items
+            .map(item => item.str)
+            .join(" ");
+
+        /*
+          Guardamos pelo número real
+          da página, e não apenas usando
+          push().
+        */
+
+        pages[
+          pageNumber - 1
+        ] = text;
+
+        return text;
+      }
   });
 
   return pages;
 }
 
 
-async function findPage(buffer, requiredPatterns) {
-  const pages = await extractPages(buffer);
+/* =========================
+   LOCALIZAR PÁGINA
+========================= */
 
-  const patterns =
-    requiredPatterns
+async function findPage(
+  buffer,
+  patterns
+) {
+  const pages =
+    await extractPages(buffer);
+
+  const required =
+    patterns
       .filter(Boolean)
       .map(normalize);
 
-  for (let i = 0; i < pages.length; i++) {
-    const page = normalize(pages[i]);
 
-    const found =
-      patterns.every(pattern =>
-        page.includes(pattern)
+  for (
+    let i = 0;
+    i < pages.length;
+    i++
+  ) {
+    const text =
+      normalize(
+        pages[i] || ""
       );
 
-    if (found) {
+    const matches =
+      required.every(
+        pattern =>
+          text.includes(pattern)
+      );
+
+    if (matches) {
       return i;
     }
   }
+
 
   return -1;
 }
@@ -323,81 +617,80 @@ async function findPage(buffer, requiredPatterns) {
    SANTORAL
 ========================= */
 
-async function findSantoralByDate(date) {
+async function findSantoral(
+  date,
+  celebration
+) {
   const buffer =
-    await fetchPdf(URLS.ferial.santoral);
+    await fetchPdf(
+      URLS.ferial.santoral
+    );
 
-  const day = date.getUTCDate();
-  const month = monthName(date);
+
+  const pages =
+    await extractPages(buffer);
+
+
+  const day =
+    date.getUTCDate();
+
+  const month =
+    monthName(date);
+
 
   /*
-    Primeiro procura:
-    "8 DE SETEMBRO"
+    MUITO IMPORTANTE:
 
-    Isso é mais seguro do que depender
-    do texto da agenda.
+    Antes:
+       "7 DE SETEMBRO"
+
+    encontrava também:
+       "27 DE SETEMBRO"
+
+    Agora verificamos a data
+    com limite numérico.
   */
 
-  const pageIndex =
-    await findPage(
-      buffer,
-      [`${day} DE ${month}`]
+  const exactDateRegex =
+    new RegExp(
+      `(^|[^0-9])${day}\\s+DE\\s+${month}([^A-Z0-9]|$)`,
+      "i"
     );
+
+
+  for (
+    let i = 0;
+    i < pages.length;
+    i++
+  ) {
+
+    const text =
+      normalize(
+        pages[i] || ""
+      );
+
+
+    if (
+      exactDateRegex.test(text)
+    ) {
+      return {
+        buffer,
+        pageIndex: i
+      };
+    }
+  }
+
+
+  /*
+    Se não houver página própria
+    daquela data no Santoral,
+    não inventamos uma.
+  */
 
   return {
     buffer,
-    pageIndex
+    pageIndex: -1
   };
-}
-
-
-/* =========================
-   CELEBRAÇÃO PRÓPRIA
-========================= */
-
-function agendaSuggestsProperCelebration(agenda) {
-  const text = normalize(agenda);
-
-  return (
-    text.includes("SOLENIDADE") ||
-    text.includes("FESTA") ||
-    text.includes("MEMORIA") ||
-    text.includes("MO ")
-  );
-}
-
-
-/*
-  Algumas celebrações universais muito
-  claras recebem prioridade explícita.
-
-  Isso também protege o caso de 8/9,
-  mesmo que o HTML da agenda mude.
-*/
-
-function fixedProperDate(date) {
-  const md =
-    String(date.getUTCMonth() + 1).padStart(2, "0") +
-    "-" +
-    String(date.getUTCDate()).padStart(2, "0");
-
-  const dates = new Set([
-    "02-02", // Apresentação do Senhor
-    "03-19", // São José
-    "03-25", // Anunciação
-    "06-24", // Natividade de João Batista
-    "06-29", // Pedro e Paulo
-    "08-06", // Transfiguração
-    "08-15", // Assunção
-    "09-08", // Natividade de Nossa Senhora
-    "09-14", // Exaltação da Santa Cruz
-    "11-01", // Todos os Santos
-    "11-02", // Fiéis Defuntos
-    "11-09", // Dedicação de Latrão
-    "12-08"  // Imaculada Conceição
-  ]);
-
-  return dates.has(md);
 }
 
 
@@ -405,25 +698,42 @@ function fixedProperDate(date) {
    FERIAL
 ========================= */
 
-async function findFerial(date, agenda) {
-  const season = getSeason(agenda);
+async function findFerial(
+  date,
+  celebration
+) {
+  const season =
+    getSeason(celebration);
 
   let url;
 
-  if (season === "advento") {
-    url = URLS.ferial.advento;
+
+  if (
+    season === "advento"
+  ) {
+    url =
+      URLS.ferial.advento;
   }
 
-  else if (season === "natal") {
-    url = URLS.ferial.natal;
+  else if (
+    season === "natal"
+  ) {
+    url =
+      URLS.ferial.natal;
   }
 
-  else if (season === "quaresma") {
-    url = URLS.ferial.quaresma;
+  else if (
+    season === "quaresma"
+  ) {
+    url =
+      URLS.ferial.quaresma;
   }
 
-  else if (season === "pascal") {
-    url = URLS.ferial.pascal;
+  else if (
+    season === "pascal"
+  ) {
+    url =
+      URLS.ferial.pascal;
   }
 
   else {
@@ -434,23 +744,40 @@ async function findFerial(date, agenda) {
   }
 
 
-  const buffer = await fetchPdf(url);
-
-  const weekday = weekdayName(date);
-  const week = getWeekRoman(agenda);
+  const buffer =
+    await fetchPdf(url);
 
 
-  let patterns = [];
+  const weekday =
+    weekdayName(date);
+
+
+  const week =
+    getWeekNumber(
+      celebration
+    );
+
+
+  const patterns = [];
+
 
   if (week) {
-    patterns.push(`SEMANA ${week}`);
+    patterns.push(
+      `SEMANA ${toRoman(week)}`
+    );
   }
 
-  patterns.push(weekday);
+
+  patterns.push(
+    weekday
+  );
 
 
   const pageIndex =
-    await findPage(buffer, patterns);
+    await findPage(
+      buffer,
+      patterns
+    );
 
 
   return {
@@ -461,56 +788,26 @@ async function findFerial(date, agenda) {
 
 
 /* =========================
-   DOMINGOS
+   DOMINGO
 ========================= */
 
-function specialSundayType(agenda) {
-  const text = normalize(agenda);
+async function findSunday(
+  date,
+  celebration
+) {
+  const cycle =
+    sundayCycle(date);
 
-  if (
-    text.includes("SANTISSIMA TRINDADE")
-  ) {
-    return "trindade";
-  }
-
-  if (
-    text.includes("SANTISSIMO CORPO") ||
-    text.includes("CORPO E SANGUE DE CRISTO") ||
-    text.includes("CORPUS CHRISTI")
-  ) {
-    return "corpus";
-  }
-
-  if (
-    text.includes("SAGRADO CORACAO DE JESUS")
-  ) {
-    return "coracao";
-  }
-
-  return null;
-}
-
-
-async function findSunday(date, agenda) {
-  const cycle = sundayCycle(date);
-
-  const special =
-    specialSundayType(agenda);
-
-  let key;
-
-  if (special) {
-    key = special;
-  } else {
-    key = getSeason(agenda);
-  }
+  const season =
+    getSeason(celebration);
 
 
   const group =
     URLS.domingo[cycle];
 
+
   const url =
-    group[key] ||
+    group[season] ||
     group.comum;
 
 
@@ -518,32 +815,13 @@ async function findSunday(date, agenda) {
     await fetchPdf(url);
 
 
-  /*
-    PDFs especiais têm apenas uma página.
-  */
-
-  if (
-    key === "trindade" ||
-    key === "corpus" ||
-    key === "coracao"
-  ) {
-    return {
-      buffer,
-      pageIndex: 0
-    };
-  }
-
-
-  const text =
-    normalize(agenda);
-
-  const match =
-    text.match(
-      /DOMINGO\s+([IVXLCDM]+)/
+  const number =
+    getSundayNumber(
+      celebration
     );
 
 
-  if (!match) {
+  if (!number) {
     throw new Error(
       "Não foi possível identificar o número do domingo."
     );
@@ -551,15 +829,19 @@ async function findSunday(date, agenda) {
 
 
   const roman =
-    match[1];
+    toRoman(number);
 
 
   const patterns =
     [`DOMINGO ${roman}`];
 
 
-  if (key === "comum") {
-    patterns.push("TEMPO COMUM");
+  if (
+    season === "comum"
+  ) {
+    patterns.push(
+      "TEMPO COMUM"
+    );
   }
 
 
@@ -578,22 +860,26 @@ async function findSunday(date, agenda) {
 
 
 /* =========================
-   RECORTAR UMA ÚNICA PÁGINA
+   CRIAR PDF DE UMA PÁGINA
 ========================= */
 
-async function makeSinglePagePdf(
+async function singlePagePdf(
   buffer,
   pageIndex
 ) {
   const source =
-    await PDFDocument.load(buffer);
+    await PDFDocument.load(
+      buffer
+    );
+
 
   if (
     pageIndex < 0 ||
-    pageIndex >= source.getPageCount()
+    pageIndex >=
+      source.getPageCount()
   ) {
     throw new Error(
-      "Página configurada fora do PDF."
+      "Página não localizada no PDF."
     );
   }
 
@@ -601,16 +887,20 @@ async function makeSinglePagePdf(
   const output =
     await PDFDocument.create();
 
+
   const [page] =
     await output.copyPages(
       source,
       [pageIndex]
     );
 
+
   output.addPage(page);
+
 
   const bytes =
     await output.save();
+
 
   return Buffer.from(bytes);
 }
@@ -626,93 +916,113 @@ async function handler(req, res) {
   const rawDate =
     req.query.date;
 
+
   const date =
-    parseISODate(rawDate);
+    parseISODate(
+      rawDate
+    );
 
 
   if (!date) {
-    return res.status(400).json({
-      error:
-        "Informe uma data válida em ?date=AAAA-MM-DD"
-    });
+
+    return res
+      .status(400)
+      .json({
+        error:
+          "Informe uma data válida em ?date=AAAA-MM-DD"
+      });
+
   }
 
 
   try {
 
-    const agenda =
-      await getAgenda(date);
+    /*
+      1. PRIMEIRO descobrimos
+         o que o BRASIL celebra.
+    */
+
+    const celebration =
+      await getBrazilianCelebration(
+        date
+      );
 
 
-    let result = null;
+    let result;
 
 
     /*
-      REGRA DE PRECEDÊNCIA
-
-      1. DOMINGO primeiro.
-         Um santo comum não substitui
-         a celebração dominical.
-
-      2. Nos outros dias, verifica
-         celebração própria.
-
-      3. Se não houver próprio,
-         utiliza o formulário ferial.
+      2. DOMINGO tem prioridade.
     */
 
-
-    if (date.getUTCDay() === 0) {
+    if (
+      date.getUTCDay() === 0
+    ) {
 
       result =
         await findSunday(
           date,
-          agenda
+          celebration
         );
 
     }
 
-    else {
 
-      const shouldTrySantoral =
-        fixedProperDate(date) ||
-        agendaSuggestsProperCelebration(
-          agenda
+    /*
+      3. DIA DE SEMANA:
+         só tenta Santoral quando
+         o calendário brasileiro
+         apresenta celebração própria.
+    */
+
+    else if (
+      isProperCelebration(
+        celebration,
+        date
+      )
+    ) {
+
+      result =
+        await findSantoral(
+          date,
+          celebration
         );
 
 
-      if (shouldTrySantoral) {
-
-        const proper =
-          await findSantoralByDate(
-            date
-          );
-
-
-        if (proper.pageIndex !== -1) {
-
-          result = proper;
-
-        }
-
-      }
-
-
       /*
-        Caso não tenha encontrado
-        uma página própria no Santoral,
-        usa a oração ferial.
+        Se Portugal não possui
+        formulário próprio para
+        essa celebração brasileira,
+        fazemos fallback para ferial
+        em vez de escolher outro santo.
       */
 
-      if (!result) {
+      if (
+        result.pageIndex === -1
+      ) {
 
         result =
           await findFerial(
             date,
-            agenda
+            celebration
           );
 
       }
+
+    }
+
+
+    /*
+      4. FERIAL NORMAL.
+    */
+
+    else {
+
+      result =
+        await findFerial(
+          date,
+          celebration
+        );
 
     }
 
@@ -727,14 +1037,16 @@ async function handler(req, res) {
         .json({
           error:
             "Não foi possível localizar a Oração dos Fiéis desta data.",
-          date: rawDate
+          date:
+            rawDate,
+          celebration
         });
 
     }
 
 
     const pdf =
-      await makeSinglePagePdf(
+      await singlePagePdf(
         result.buffer,
         result.pageIndex
       );
@@ -745,10 +1057,12 @@ async function handler(req, res) {
       "application/pdf"
     );
 
+
     res.setHeader(
       "Content-Disposition",
       `inline; filename="preces-${rawDate}.pdf"`
     );
+
 
     res.setHeader(
       "Cache-Control",
