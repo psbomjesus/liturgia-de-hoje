@@ -14,22 +14,18 @@
     content="#f7f3ec"
   >
 
-  <link
-    rel="manifest"
-    href="/manifest.json"
-  >
+  <link rel="manifest" href="/manifest.json">
 
   <!-- FONTES -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
   <link
-    href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;500;600;700&family=Montserrat:wght@500;600;700&family=Nunito:wght@400;500;600;700;800&display=swap"
+    href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700;800&display=swap"
     rel="stylesheet"
   >
 
   <title>Liturgia do Dia</title>
-
 
   <style>
 
@@ -43,23 +39,20 @@
       --soft: #eee7dd;
     }
 
-
     * {
       box-sizing: border-box;
     }
 
-
     html {
       scroll-behavior: smooth;
     }
-
 
     body {
       margin: 0;
       background: var(--bg);
 
       font-family:
-        "Nunito",
+        "Montserrat",
         -apple-system,
         BlinkMacSystemFont,
         "Segoe UI",
@@ -67,7 +60,6 @@
 
       color: var(--text);
     }
-
 
     .wrap {
       max-width: 720px;
@@ -77,7 +69,7 @@
 
 
     /* =========================
-       NOME DO APP
+       LITURGIA DO DIA
        MONTSERRAT
     ========================= */
 
@@ -111,15 +103,16 @@
     }
 
 
-    /* TERÇA-FEIRA */
+    /* DIA DA SEMANA
+       MONTSERRAT */
 
     .weekday {
       font-family:
-        "Nunito",
+        "Montserrat",
         sans-serif;
 
       font-size: 12px;
-      font-weight: 700;
+      font-weight: 600;
 
       letter-spacing: .15em;
 
@@ -127,48 +120,50 @@
     }
 
 
-    /* 8 de setembro de 2026 */
+    /* DATA
+       LEAGUE SPARTAN */
 
     .date {
       font-family:
         "League Spartan",
         sans-serif;
 
-      font-size: 34px;
+      font-size: 35px;
       font-weight: 600;
 
       line-height: 1.15;
 
-      margin:
-        8px 0 12px;
+      margin: 8px 0 12px;
     }
 
 
-    /* Natividade da Virgem Santa Maria */
+    /* NOME DA CELEBRAÇÃO
+       MONTSERRAT */
 
     .celebration {
       font-family:
-        "Nunito",
+        "Montserrat",
         sans-serif;
 
       font-weight: 700;
       font-size: 17px;
 
-      line-height: 1.35;
+      line-height: 1.4;
     }
 
 
-    /* Festa · Branco */
+    /* FESTA · BRANCO
+       MONTSERRAT */
 
     .meta {
       margin-top: 9px;
 
       font-family:
-        "Nunito",
+        "Montserrat",
         sans-serif;
 
-      font-size: 14px;
-      font-weight: 600;
+      font-size: 13px;
+      font-weight: 500;
 
       color: var(--muted);
     }
@@ -186,18 +181,14 @@
 
       gap: 8px;
 
-      margin:
-        4px 0 14px;
+      margin: 4px 0 14px;
 
       position: sticky;
-
       top: 0;
 
-      background:
-        var(--bg);
+      background: var(--bg);
 
-      padding:
-        8px 0;
+      padding: 8px 0;
 
       z-index: 5;
     }
@@ -205,24 +196,24 @@
 
     .tabs a {
       text-decoration: none;
-
       text-align: center;
 
       padding: 12px;
 
       border-radius: 12px;
 
-      background:
-        var(--soft);
+      background: var(--soft);
 
-      color:
-        #4a4037;
+      color: #4a4037;
 
       font-family:
-        "Nunito",
+        "Montserrat",
         sans-serif;
 
+      font-size: 13px;
       font-weight: 700;
+
+      letter-spacing: .04em;
     }
 
 
@@ -231,83 +222,70 @@
     ========================= */
 
     .card {
-      background:
-        var(--card);
+      background: var(--card);
 
       border:
         1px solid
         var(--line);
 
-      border-radius:
-        18px;
+      border-radius: 18px;
 
-      padding:
-        21px;
+      padding: 21px;
 
-      margin:
-        13px 0;
+      margin: 13px 0;
 
       box-shadow:
         0 4px 18px
-        rgba(0, 0, 0, .035);
+        rgba(0,0,0,.035);
     }
 
 
-    /*
-      LITURGIA DO DIA
-      ORAÇÃO DOS FIÉIS
+    /* LITURGIA DA PALAVRA
+       ORAÇÃO DOS FIÉIS – PRECES
 
-      NUNITO EM NEGRITO
+       LEAGUE SPARTAN
     */
 
     .card h2 {
       font-family:
-        "Nunito",
+        "League Spartan",
         sans-serif;
 
-      font-size:
-        22px;
+      font-size: 24px;
+      font-weight: 700;
 
-      font-weight:
-        800;
+      letter-spacing: .02em;
 
-      margin:
-        0 0 15px;
+      margin: 0 0 15px;
 
-      line-height:
-        1.25;
+      line-height: 1.2;
     }
 
 
     .placeholder {
       font-family:
-        "Nunito",
+        "Montserrat",
         sans-serif;
 
-      line-height:
-        1.65;
+      line-height: 1.65;
 
-      color:
-        #4d463f;
+      color: #4d463f;
     }
 
 
     /* =========================
-       NAVEGAÇÃO DOS DIAS
+       NAVEGAÇÃO
     ========================= */
 
     .nav {
-      display:
-        grid;
+      display: grid;
 
       grid-template-columns:
         1fr 1fr 1fr;
 
-      gap:
-        8px;
+      gap: 8px;
 
-      margin-top:
-        21px;
+      margin-top: 21px;
     }
 
 
@@ -316,30 +294,22 @@
         1px solid
         var(--line);
 
-      background:
-        #fff;
+      background: #fff;
 
-      border-radius:
-        12px;
+      border-radius: 12px;
 
-      padding:
-        12px 5px;
+      padding: 12px 5px;
 
       font-family:
-        "Nunito",
+        "Montserrat",
         sans-serif;
 
-      font-size:
-        14px;
+      font-size: 13px;
+      font-weight: 600;
 
-      font-weight:
-        600;
+      color: var(--text);
 
-      color:
-        var(--text);
-
-      cursor:
-        pointer;
+      cursor: pointer;
     }
 
 
@@ -349,23 +319,18 @@
 
     .small {
       font-family:
-        "Nunito",
+        "Montserrat",
         sans-serif;
 
-      font-size:
-        12px;
+      font-size: 11px;
 
-      color:
-        var(--muted);
+      color: var(--muted);
 
-      line-height:
-        1.5;
+      line-height: 1.5;
 
-      margin-top:
-        18px;
+      margin-top: 18px;
 
-      text-align:
-        center;
+      text-align: center;
     }
 
 
@@ -374,21 +339,16 @@
     ========================= */
 
     iframe {
-      width:
-        100%;
-
-      height:
-        620px;
+      width: 100%;
+      height: 620px;
 
       border:
         1px solid
         var(--line);
 
-      border-radius:
-        12px;
+      border-radius: 12px;
 
-      background:
-        white;
+      background: white;
     }
 
   </style>
@@ -398,11 +358,12 @@
 
 <body>
 
-
   <div class="wrap">
 
 
-    <!-- MONTSERRAT -->
+    <!--
+      1. MONTSERRAT
+    -->
 
     <div class="brand">
       LITURGIA DO DIA
@@ -412,7 +373,10 @@
     <section class="hero">
 
 
-      <!-- NUNITO -->
+      <!--
+        4. DIA DA SEMANA
+        MONTSERRAT
+      -->
 
       <div
         class="weekday"
@@ -420,7 +384,10 @@
       ></div>
 
 
-      <!-- LEAGUE SPARTAN -->
+      <!--
+        2. DATA
+        LEAGUE SPARTAN
+      -->
 
       <div
         class="date"
@@ -428,7 +395,10 @@
       ></div>
 
 
-      <!-- NUNITO -->
+      <!--
+        3. NOME DA CELEBRAÇÃO
+        MONTSERRAT
+      -->
 
       <div
         class="celebration"
@@ -439,11 +409,12 @@
 
 
       <!--
-        NUNITO
+        4. FESTA · BRANCO
+        MONTSERRAT
 
-        A bolinha é criada
-        automaticamente pelo app.js
-        conforme a cor litúrgica.
+        A bolinha da cor litúrgica
+        continua sendo criada
+        automaticamente pelo app.js.
       -->
 
       <div
@@ -463,18 +434,21 @@
     <div class="tabs">
 
       <a href="#liturgia">
-        📖 LITURGIA DA PALAVRA
+        LITURGIA DA PALAVRA
       </a>
 
       <a href="#preces">
-        🙏 ORAÇÃO DOS FIÉIS - Preces
+        ORAÇÃO DOS FIÉIS - PRECES
       </a>
 
     </div>
 
 
 
-    <!-- LITURGIA -->
+    <!--
+      5. LITURGIA DA PALAVRA
+      LEAGUE SPARTAN
+    -->
 
     <section
       class="card"
@@ -482,7 +456,7 @@
     >
 
       <h2>
-        📖 Liturgia do dia
+        LITURGIA DA PALAVRA
       </h2>
 
       <div class="placeholder">
@@ -497,7 +471,10 @@
 
 
 
-    <!-- ORAÇÃO DOS FIÉIS -->
+    <!--
+      6. ORAÇÃO DOS FIÉIS – PRECES
+      LEAGUE SPARTAN
+    -->
 
     <section
       class="card"
@@ -505,20 +482,17 @@
     >
 
       <h2>
-        🙏 Oração dos Fiéis - Preces
+        ORAÇÃO DOS FIÉIS – PRECES
       </h2>
 
       <div
         class="placeholder"
         id="prayerStatus"
       >
-
         O app identificará automaticamente
         o formulário correspondente
         e exibirá aqui o PDF oficial.
-
       </div>
-
 
       <div
         id="pdfArea"
@@ -537,27 +511,24 @@
         type="button"
         id="prevBtn"
       >
-        ← Ontem
+        ← Dia anterior
       </button>
-
 
       <button
         type="button"
         id="todayBtn"
       >
-        Hoje
+        Dia atual
       </button>
-
 
       <button
         type="button"
         id="nextBtn"
       >
-        Amanhã →
+        Dia posterior →
       </button>
 
     </div>
-
 
 
     <div class="small">
@@ -573,7 +544,6 @@
 
 
   <script src="/app.js"></script>
-
 
 </body>
 
