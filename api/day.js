@@ -1,21 +1,43 @@
-function normalize(text = "") {
+function decodeHtml(text = "") {
   return String(text)
     .replace(/&nbsp;/gi, " ")
     .replace(/&amp;/gi, "&")
-    .replace(/&#039;/gi, "'")
     .replace(/&quot;/gi, '"')
+    .replace(/&#039;/gi, "'")
+    .replace(/&#39;/gi, "'")
+    .replace(/&aacute;/gi, "á")
+    .replace(/&eacute;/gi, "é")
+    .replace(/&iacute;/gi, "í")
+    .replace(/&oacute;/gi, "ó")
+    .replace(/&uacute;/gi, "ú")
+    .replace(/&Aacute;/gi, "Á")
+    .replace(/&Eacute;/gi, "É")
+    .replace(/&Iacute;/gi, "Í")
+    .replace(/&Oacute;/gi, "Ó")
+    .replace(/&Uacute;/gi, "Ú")
+    .replace(/&atilde;/gi, "ã")
+    .replace(/&otilde;/gi, "õ")
+    .replace(/&ccedil;/gi, "ç")
+    .replace(/&ordf;/gi, "ª")
+    .replace(/&ordm;/gi, "º")
     .replace(/\s+/g, " ")
     .trim();
 }
 
 
-function stripTags(html = "") {
-  return normalize(
-    html
-      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "")
-      .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "")
-      .replace(/<[^>]+>/g, "\n")
+function stripTags(text = "") {
+  return decodeHtml(
+    String(text)
+      .replace(/<[^>]+>/g, " ")
   );
+}
+
+
+function normalize(text = "") {
+  return String(text)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase();
 }
 
 
@@ -44,198 +66,65 @@ function parseDate(value) {
 }
 
 
-function firstSundayOfAdvent(year) {
-  const start =
-    new Date(Date.UTC(year, 10, 27, 12));
+/* =========================
+   TÍTULO DA CELEBRAÇÃO
+========================= */
 
-  for (let i = 0; i < 7; i++) {
-    const date = new Date(start);
+function extractCelebration(html) {
 
-    date.setUTCDate(
-      start.getUTCDate() + i
+  /*
+    O título litúrgico principal
+    do Pocket Terço está no primeiro H1.
+
+    Exemplo:
+    <h1>6ª feira da 22ª Semana do Tempo Comum</h1>
+  */
+
+  const match =
+    html.match(
+      /<h1\b[^>]*>([\s\S]*?)<\/h1>/i
     );
 
-    if (date.getUTCDay() === 0) {
-      return date;
-    }
+  if (!match) {
+    return "Liturgia do dia";
   }
 
-  return null;
-}
-
-
-function sundayCycle(date) {
-  const civilYear =
-    date.getUTCFullYear();
-
-  const advent =
-    firstSundayOfAdvent(civilYear);
-
-  let liturgicalYear =
-    civilYear;
-
-  if (
-    advent &&
-    date.getTime() >= advent.getTime()
-  ) {
-    liturgicalYear =
-      civilYear + 1;
-  }
-
-  const mod =
-    liturgicalYear % 3;
-
-  if (mod === 1) return "A";
-  if (mod === 2) return "B";
-
-  return "C";
+  return stripTags(match[1]);
 }
 
 
 /* =========================
-   IDENTIFICAÇÃO DO TÍTULO
+   GRAU LITÚRGICO
 ========================= */
 
-function findCelebration(text) {
-  const lines =
-    text
-      .split("\n")
-      .map(line => line.trim())
-      .filter(Boolean);
-
-
-  /*
-    O Pocket Terço costuma apresentar
-    próximo do início algo como:
-
-    Liturgia do dia 08/09/2026
-    Natividade de Nossa Senhora
-
-    ou:
-
-    4ª feira da 23ª Semana do Tempo Comum
-  */
-
-
-  for (let i = 0; i < lines.length; i++) {
-
-    const line = lines[i];
-
-    if (
-      /Liturgia do dia/i.test(line)
-    ) {
-
-      /*
-        Procura nas linhas logo seguintes
-        o nome litúrgico principal.
-      */
-
-      for (
-        let j = i + 1;
-        j <= i + 8 && j < lines.length;
-        j++
-      ) {
-
-        const candidate =
-          lines[j].trim();
-
-        if (
-          candidate.length < 3
-        ) {
-          continue;
-        }
-
-
-        if (
-          /Antífona/i.test(candidate) ||
-          /Ordinário da Missa/i.test(candidate) ||
-          /Gradual/i.test(candidate) ||
-          /Sugestões/i.test(candidate)
-        ) {
-          continue;
-        }
-
-
-        return candidate;
-      }
-    }
-  }
-
-
-  /*
-    Plano B:
-    procura diretamente expressões
-    típicas do calendário brasileiro.
-  */
-
-  const candidates =
-    lines.filter(line =>
-      (
-        /Semana do Tempo Comum/i.test(line) ||
-        /Domingo.*Tempo Comum/i.test(line) ||
-        /Domingo.*Advento/i.test(line) ||
-        /Domingo.*Quaresma/i.test(line) ||
-        /Domingo.*Páscoa/i.test(line) ||
-        /Natal do Senhor/i.test(line) ||
-        /Natividade/i.test(line) ||
-        /Assunção/i.test(line) ||
-        /Imaculada/i.test(line) ||
-        /São |Santa |Santos |Santas /i.test(line)
-      )
-    );
-
-
-  if (candidates.length) {
-    return candidates[0];
-  }
-
-
-  return "Liturgia do dia";
-}
-
-
-/* =========================
-   GRAU DA CELEBRAÇÃO
-========================= */
-
-function detectRank(text, celebration) {
-  const combined =
-    `${celebration} ${text}`
-      .toUpperCase();
+function extractRank(celebration) {
+  const value =
+    normalize(celebration);
 
 
   if (
-    combined.includes("SOLENIDADE")
+    value.includes("SOLENIDADE")
   ) {
     return "Solenidade";
   }
 
 
   if (
-    combined.includes("FESTA")
+    value.includes("FESTA")
   ) {
     return "Festa";
   }
 
 
   if (
-    combined.includes("MEMÓRIA OBRIGATÓRIA") ||
-    combined.includes("MEMORIA OBRIGATORIA")
+    value.includes("MEMORIA")
   ) {
     return "Memória";
   }
 
 
   if (
-    combined.includes("MEMÓRIA FACULTATIVA") ||
-    combined.includes("MEMORIA FACULTATIVA")
-  ) {
-    return "Memória facultativa";
-  }
-
-
-  if (
-    /DOMINGO/i.test(celebration)
+    value.includes("DOMINGO")
   ) {
     return "Domingo";
   }
@@ -246,128 +135,34 @@ function detectRank(text, celebration) {
 
 
 /* =========================
-   COR LITÚRGICA
+   LIMPEZA DO TÍTULO
 ========================= */
 
-function detectColor(text, celebration, rank) {
-  const value =
-    `${celebration} ${rank} ${text}`
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toUpperCase();
-
-
+function cleanCelebrationTitle(
+  celebration
+) {
   /*
-    Quando a própria página contém
-    indicação explícita de cor,
-    ela tem prioridade.
+    Se o próprio H1 já disser:
+    "Natividade ..., Festa"
+
+    deixamos "Festa" para o campo rank
+    e retiramos do nome principal.
   */
 
-  if (
-    /COR LITURGICA.{0,30}BRANCO/.test(value) ||
-    /COR.{0,15}BRANCA/.test(value)
-  ) {
-    return "Branco";
-  }
-
-
-  if (
-    /COR LITURGICA.{0,30}VERDE/.test(value)
-  ) {
-    return "Verde";
-  }
-
-
-  if (
-    /COR LITURGICA.{0,30}VERMELH/.test(value)
-  ) {
-    return "Vermelho";
-  }
-
-
-  if (
-    /COR LITURGICA.{0,30}ROX/.test(value) ||
-    /COR LITURGICA.{0,30}VIOLET/.test(value)
-  ) {
-    return "Roxo";
-  }
-
-
-  if (
-    /COR LITURGICA.{0,30}ROSA/.test(value)
-  ) {
-    return "Rosa";
-  }
-
-
-  /*
-    Se a página não expuser a cor
-    de forma legível no HTML,
-    usamos regras litúrgicas seguras.
-  */
-
-
-  /*
-    Mártires, Paixão, Pentecostes etc.
-  */
-
-  if (
-    value.includes("MARTIR") ||
-    value.includes("MARTIRES") ||
-    value.includes("PAIXAO DO SENHOR") ||
-    value.includes("PENTECOSTES")
-  ) {
-    return "Vermelho";
-  }
-
-
-  /*
-    Advento e Quaresma.
-  */
-
-  if (
-    value.includes("ADVENTO") ||
-    value.includes("QUARESMA") ||
-    value.includes("CINZAS")
-  ) {
-    return "Roxo";
-  }
-
-
-  /*
-    Celebrações do Senhor, de Nossa Senhora,
-    anjos e santos não mártires.
-  */
-
-  if (
-    value.includes("NATAL") ||
-    value.includes("PASCOA") ||
-    value.includes("NATIVIDADE DA VIRGEM") ||
-    value.includes("NOSSA SENHORA") ||
-    value.includes("VIRGEM MARIA") ||
-    value.includes("IMACULADA") ||
-    value.includes("ASSUNCAO") ||
-    value.includes("TRANSFIGURACAO") ||
-    value.includes("SAO JOSE") ||
-    value.includes("ANJOS") ||
-    value.includes("ARCANJOS")
-  ) {
-    return "Branco";
-  }
-
-
-  /*
-    Tempo Comum ferial e domingos.
-  */
-
-  if (
-    value.includes("TEMPO COMUM")
-  ) {
-    return "Verde";
-  }
-
-
-  return "";
+  return celebration
+    .replace(
+      /,\s*Solenidade\s*$/i,
+      ""
+    )
+    .replace(
+      /,\s*Festa\s*$/i,
+      ""
+    )
+    .replace(
+      /,\s*Memória(?:\s+obrigatória|\s+facultativa)?\s*$/i,
+      ""
+    )
+    .trim();
 }
 
 
@@ -375,12 +170,9 @@ function detectColor(text, celebration, rank) {
    TEMPO LITÚRGICO
 ========================= */
 
-function detectSeason(text, celebration) {
+function detectSeason(celebration) {
   const value =
-    `${celebration} ${text}`
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toUpperCase();
+    normalize(celebration);
 
 
   if (
@@ -406,8 +198,8 @@ function detectSeason(text, celebration) {
 
 
   if (
-    value.includes("TEMPO PASCAL") ||
-    value.includes("PASCOA")
+    value.includes("PASCOA") ||
+    value.includes("TEMPO PASCAL")
   ) {
     return "Tempo Pascal";
   }
@@ -425,6 +217,187 @@ function detectSeason(text, celebration) {
 
 
 /* =========================
+   COR LITÚRGICA
+========================= */
+
+function detectColor(
+  celebration,
+  season
+) {
+  const value =
+    normalize(celebration);
+
+
+  /*
+    VERMELHO
+  */
+
+  if (
+    value.includes("PENTECOSTES") ||
+    value.includes("PAIXAO DO SENHOR") ||
+    value.includes("DOMINGO DE RAMOS") ||
+    value.includes("EXALTACAO DA SANTA CRUZ") ||
+    value.includes("MARTIR") ||
+    value.includes("MARTIRES") ||
+    value.includes("APOSTOLO") ||
+    value.includes("APOSTOLOS") ||
+    value.includes("EVANGELISTA")
+  ) {
+    return "Vermelho";
+  }
+
+
+  /*
+    ROXO
+  */
+
+  if (
+    season === "Advento" ||
+    season === "Quaresma"
+  ) {
+    return "Roxo";
+  }
+
+
+  /*
+    VERDE
+  */
+
+  if (
+    season === "Tempo Comum"
+  ) {
+    return "Verde";
+  }
+
+
+  /*
+    BRANCO:
+    Natal, Páscoa e festas do Senhor,
+    Nossa Senhora, anjos e santos
+    não mártires.
+  */
+
+  if (
+    season === "Tempo do Natal" ||
+    season === "Tempo Pascal" ||
+
+    value.includes("VIRGEM MARIA") ||
+    value.includes("NOSSA SENHORA") ||
+    value.includes("NATIVIDADE DA BEM-AVENTURADA VIRGEM") ||
+    value.includes("IMACULADA CONCEICAO") ||
+    value.includes("ASSUNCAO") ||
+    value.includes("APRESENTACAO DO SENHOR") ||
+    value.includes("TRANSFIGURACAO") ||
+    value.includes("SAO JOSE") ||
+    value.includes("SANTISSIMA TRINDADE") ||
+    value.includes("CORPO E SANGUE DE CRISTO") ||
+    value.includes("CORPUS CHRISTI") ||
+    value.includes("SAGRADO CORACAO") ||
+    value.includes("ANJO") ||
+    value.includes("ARCANJO")
+  ) {
+    return "Branco";
+  }
+
+
+  /*
+    Se for Festa ou Solenidade
+    sem característica de mártir,
+    branco é o caso mais comum.
+  */
+
+  if (
+    value.includes("FESTA") ||
+    value.includes("SOLENIDADE")
+  ) {
+    return "Branco";
+  }
+
+
+  return "";
+}
+
+
+/* =========================
+   ANO A / B / C
+========================= */
+
+function firstSundayOfAdvent(year) {
+  const start =
+    new Date(
+      Date.UTC(
+        year,
+        10,
+        27,
+        12
+      )
+    );
+
+
+  for (
+    let i = 0;
+    i < 7;
+    i++
+  ) {
+    const date =
+      new Date(start);
+
+    date.setUTCDate(
+      start.getUTCDate() + i
+    );
+
+    if (
+      date.getUTCDay() === 0
+    ) {
+      return date;
+    }
+  }
+
+
+  return null;
+}
+
+
+function sundayCycle(date) {
+  const civilYear =
+    date.getUTCFullYear();
+
+  const advent =
+    firstSundayOfAdvent(
+      civilYear
+    );
+
+  let liturgicalYear =
+    civilYear;
+
+
+  if (
+    advent &&
+    date.getTime() >=
+      advent.getTime()
+  ) {
+    liturgicalYear =
+      civilYear + 1;
+  }
+
+
+  const mod =
+    liturgicalYear % 3;
+
+
+  if (mod === 1) {
+    return "A";
+  }
+
+  if (mod === 2) {
+    return "B";
+  }
+
+  return "C";
+}
+
+
+/* =========================
    HANDLER
 ========================= */
 
@@ -433,6 +406,7 @@ async function handler(req, res) {
 
   const rawDate =
     req.query.date;
+
 
   const date =
     parseDate(rawDate);
@@ -457,30 +431,31 @@ async function handler(req, res) {
         date.getUTCDate()
       ).padStart(2, "0");
 
+
     const month =
       String(
         date.getUTCMonth() + 1
       ).padStart(2, "0");
 
+
     const year =
       date.getUTCFullYear();
 
-
-    /*
-      MESMA FONTE DA LITURGIA
-      UTILIZADA NO APP.
-    */
 
     const url =
       `https://pocketterco.com.br/liturgia/${day}/${month}/${year}`;
 
 
     const response =
-      await fetch(url, {
-        headers: {
-          "User-Agent": "Mozilla/5.0"
+      await fetch(
+        url,
+        {
+          headers: {
+            "User-Agent":
+              "Mozilla/5.0"
+          }
         }
-      });
+      );
 
 
     if (!response.ok) {
@@ -495,33 +470,37 @@ async function handler(req, res) {
     const html =
       await response.text();
 
-    const text =
-      stripTags(html);
 
+    /*
+      Agora pegamos SOMENTE o H1.
+    */
 
-    const celebration =
-      findCelebration(text);
+    const rawCelebration =
+      extractCelebration(html);
 
 
     const rank =
-      detectRank(
-        text,
-        celebration
+      extractRank(
+        rawCelebration
       );
 
 
-    const color =
-      detectColor(
-        text,
-        celebration,
-        rank
+    const celebration =
+      cleanCelebrationTitle(
+        rawCelebration
       );
 
 
     const season =
       detectSeason(
-        text,
-        celebration
+        rawCelebration
+      );
+
+
+    const color =
+      detectColor(
+        rawCelebration,
+        season
       );
 
 
@@ -535,25 +514,23 @@ async function handler(req, res) {
         : "";
 
 
+    res.setHeader(
+      "Cache-Control",
+      "public, max-age=3600, s-maxage=86400"
+    );
+
+
     return res
       .status(200)
       .json({
-
         date: rawDate,
-
         celebration,
-
         rank,
-
         color,
-
         season,
-
         cycle,
-
         source:
-          "Pocket Terço / textos litúrgicos brasileiros"
-
+          "Pocket Terço"
       });
 
 
@@ -568,13 +545,10 @@ async function handler(req, res) {
     return res
       .status(500)
       .json({
-
         error:
           "Não foi possível identificar os dados litúrgicos desta data.",
-
         detail:
           error.message
-
       });
 
   }
