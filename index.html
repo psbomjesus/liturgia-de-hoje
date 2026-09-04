@@ -2,79 +2,327 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#f7f3ec">
-  <link rel="manifest" href="/manifest.json">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,viewport-fit=cover"
+  >
+
+  <meta
+    name="theme-color"
+    content="#f7f3ec"
+  >
+
+  <link
+    rel="manifest"
+    href="/manifest.json"
+  >
+
   <title>Liturgia de Hoje</title>
+
   <style>
-    :root{
-      --bg:#f7f3ec; --card:#fffdf9; --text:#25221f; --muted:#746d64;
-      --accent:#765d43; --line:#e9e0d5; --green:#4d7a57; --soft:#eee7dd;
+    :root {
+      --bg: #f7f3ec;
+      --card: #fffdf9;
+      --text: #25221f;
+      --muted: #746d64;
+      --accent: #765d43;
+      --line: #e9e0d5;
+      --soft: #eee7dd;
     }
-    *{box-sizing:border-box}
-    html{scroll-behavior:smooth}
-    body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text)}
-    .wrap{max-width:720px;margin:auto;padding:22px 16px 44px}
-    .brand{text-align:center;font-family:Georgia,serif;letter-spacing:.12em;color:var(--accent);font-size:17px;margin-top:8px}
-    .hero{text-align:center;padding:28px 8px 22px}
-    .weekday{font-size:12px;font-weight:700;letter-spacing:.17em;color:var(--muted)}
-    .date{font-family:Georgia,serif;font-size:31px;line-height:1.15;margin:8px 0 12px}
-    .celebration{font-weight:700;font-size:17px}
-    .meta{margin-top:9px;color:var(--muted);font-size:14px}
-    .dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--green);margin-right:6px}
-    .tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 14px;position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:5}
-    .tabs a{text-decoration:none;text-align:center;padding:12px;border-radius:12px;background:var(--soft);color:#4a4037;font-weight:700}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:21px;margin:13px 0;box-shadow:0 4px 18px rgba(0,0,0,.035)}
-    .card h2{font-family:Georgia,serif;font-size:22px;margin:0 0 15px}
-    .placeholder{line-height:1.65;color:#4d463f}
-    .nav{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:21px}
-    .nav button{border:1px solid var(--line);background:#fff;border-radius:12px;padding:12px 5px;font-size:14px;color:var(--text)}
-    .small{font-size:12px;color:var(--muted);line-height:1.5;margin-top:18px;text-align:center}
-    iframe{width:100%;height:620px;border:1px solid var(--line);border-radius:12px;background:white}
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 720px;
+      margin: auto;
+      padding: 22px 16px 44px;
+    }
+
+    .brand {
+      text-align: center;
+      font-family: Georgia, serif;
+      letter-spacing: .12em;
+      color: var(--accent);
+      font-size: 17px;
+      margin-top: 8px;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 28px 8px 22px;
+    }
+
+    .weekday {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .17em;
+      color: var(--muted);
+    }
+
+    .date {
+      font-family: Georgia, serif;
+      font-size: 31px;
+      line-height: 1.15;
+      margin: 8px 0 12px;
+    }
+
+    .celebration {
+      font-weight: 700;
+      font-size: 17px;
+    }
+
+    /*
+      Aqui fica apenas o espaço
+      onde o app.js colocará
+      automaticamente a bolinha
+      da cor litúrgica + o texto.
+    */
+
+    .meta {
+      margin-top: 9px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 4px 0 14px;
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      padding: 8px 0;
+      z-index: 5;
+    }
+
+    .tabs a {
+      text-decoration: none;
+      text-align: center;
+      padding: 12px;
+      border-radius: 12px;
+      background: var(--soft);
+      color: #4a4037;
+      font-weight: 700;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 21px;
+      margin: 13px 0;
+      box-shadow:
+        0 4px 18px
+        rgba(0, 0, 0, .035);
+    }
+
+    .card h2 {
+      font-family: Georgia, serif;
+      font-size: 22px;
+      margin: 0 0 15px;
+    }
+
+    .placeholder {
+      line-height: 1.65;
+      color: #4d463f;
+    }
+
+    .nav {
+      display: grid;
+      grid-template-columns:
+        1fr 1fr 1fr;
+      gap: 8px;
+      margin-top: 21px;
+    }
+
+    .nav button {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 12px;
+      padding: 12px 5px;
+      font-size: 14px;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .small {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-top: 18px;
+      text-align: center;
+    }
+
+    iframe {
+      width: 100%;
+      height: 620px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: white;
+    }
   </style>
 </head>
+
+
 <body>
-<div class="wrap">
-  <div class="brand">LITURGIA DE HOJE</div>
 
-  <section class="hero">
-    <div class="weekday" id="weekday"></div>
-    <div class="date" id="date"></div>
-    <div class="celebration" id="celebration">Carregando celebração...</div>
-    <div class="meta"><span class="dot"></span><span id="meta">Calendário litúrgico em preparação</span></div>
-  </section>
+  <div class="wrap">
 
-  <div class="tabs">
-    <a href="#liturgia">📖 Liturgia</a>
-    <a href="#preces">🙏 Preces</a>
-  </div>
-
-  <section class="card" id="liturgia">
-    <h2>📖 Liturgia do dia</h2>
-    <div class="placeholder">
-      Esta área será conectada à fonte oficial da liturgia, com o texto integral para os leitores treinarem exatamente como será proclamado na Missa.
+    <div class="brand">
+      LITURGIA DE HOJE
     </div>
-  </section>
 
-  <section class="card" id="preces">
-    <h2>🙏 Oração dos Fiéis</h2>
-    <div class="placeholder" id="prayerStatus">
-      O app identificará automaticamente o formulário correspondente e exibirá aqui o PDF oficial.
+
+    <section class="hero">
+
+      <div
+        class="weekday"
+        id="weekday"
+      ></div>
+
+      <div
+        class="date"
+        id="date"
+      ></div>
+
+      <div
+        class="celebration"
+        id="celebration"
+      >
+        Carregando celebração...
+      </div>
+
+
+      <!--
+        A bolinha verde fixa foi
+        retirada daqui.
+
+        O app.js agora cria
+        automaticamente a bolinha
+        conforme a cor litúrgica.
+      -->
+
+      <div
+        class="meta"
+        id="meta"
+      >
+        Calendário litúrgico em preparação
+      </div>
+
+    </section>
+
+
+    <div class="tabs">
+
+      <a href="#liturgia">
+        📖 Liturgia
+      </a>
+
+      <a href="#preces">
+        🙏 Preces
+      </a>
+
     </div>
-    <div id="pdfArea" style="margin-top:14px"></div>
-  </section>
 
-  <div class="nav">
-    <button type="button" id="prevBtn">← Ontem</button>
-    <button type="button" id="todayBtn">Hoje</button>
-    <button type="button" id="nextBtn">Amanhã →</button>
+
+    <section
+      class="card"
+      id="liturgia"
+    >
+
+      <h2>
+        📖 Liturgia do dia
+      </h2>
+
+      <div class="placeholder">
+        Esta área será conectada à fonte oficial da liturgia,
+        com o texto integral para os leitores treinarem
+        exatamente como será proclamado na Missa.
+      </div>
+
+    </section>
+
+
+    <section
+      class="card"
+      id="preces"
+    >
+
+      <h2>
+        🙏 Oração dos Fiéis
+      </h2>
+
+      <div
+        class="placeholder"
+        id="prayerStatus"
+      >
+        O app identificará automaticamente o formulário
+        correspondente e exibirá aqui o PDF oficial.
+      </div>
+
+      <div
+        id="pdfArea"
+        style="margin-top:14px"
+      ></div>
+
+    </section>
+
+
+    <div class="nav">
+
+      <button
+        type="button"
+        id="prevBtn"
+      >
+        ← Dia anterior
+      </button>
+
+      <button
+        type="button"
+        id="todayBtn"
+      >
+        Dia atual
+      </button>
+
+      <button
+        type="button"
+        id="nextBtn"
+      >
+        Dia posterior →
+      </button>
+
+    </div>
+
+
+    <div class="small">
+      Versão inicial para publicação no Vercel.
+      A integração automática com as fontes oficiais
+      será adicionada na próxima etapa.
+    </div>
+
   </div>
 
-  <div class="small">
-    Versão inicial para publicação no Vercel. A integração automática com as fontes oficiais será adicionada na próxima etapa.
-  </div>
-</div>
 
-<script src="/app.js"></script>
+  <script src="/app.js"></script>
+
 </body>
 </html>
