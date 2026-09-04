@@ -118,14 +118,9 @@ function parseISODate(value) {
 
   if (!match) return null;
 
-  const year =
-    Number(match[1]);
-
-  const month =
-    Number(match[2]);
-
-  const day =
-    Number(match[3]);
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
 
   const date =
     new Date(
@@ -159,6 +154,30 @@ function weekdayName(date) {
     "SEXTA-FEIRA",
     "SABADO"
   ][date.getUTCDay()];
+}
+
+
+/*
+  Segunda = 0
+  Terça   = 1
+  Quarta  = 2
+  Quinta  = 3
+  Sexta   = 4
+  Sábado  = 5
+*/
+
+function weekdayOffset(date) {
+  const day =
+    date.getUTCDay();
+
+  if (day === 1) return 0;
+  if (day === 2) return 1;
+  if (day === 3) return 2;
+  if (day === 4) return 3;
+  if (day === 5) return 4;
+  if (day === 6) return 5;
+
+  return 0;
 }
 
 
@@ -217,7 +236,6 @@ function toRoman(number) {
 
 /* =========================
    CALENDÁRIO BRASILEIRO
-   POCKET TERÇO
 ========================= */
 
 async function getBrazilianCelebration(date) {
@@ -269,7 +287,7 @@ async function getBrazilianCelebration(date) {
 
 
 /* =========================
-   CLASSIFICAÇÃO
+   TEMPO / SEMANA
 ========================= */
 
 function getSeason(celebration) {
@@ -310,9 +328,7 @@ function getSeason(celebration) {
 }
 
 
-function getWeekNumber(
-  celebration
-) {
+function getWeekNumber(celebration) {
   const text =
     normalize(celebration);
 
@@ -329,9 +345,7 @@ function getWeekNumber(
 }
 
 
-function getSundayNumber(
-  celebration
-) {
+function getSundayNumber(celebration) {
   const text =
     normalize(celebration);
 
@@ -349,29 +363,44 @@ function getSundayNumber(
 
 
 /* =========================
-   É CELEBRAÇÃO PRÓPRIA?
+   CELEBRAÇÃO PRÓPRIA?
 ========================= */
 
 function isProperCelebration(
   celebration,
   date
 ) {
+  /*
+    DOMINGO TEM PRIORIDADE.
+  */
+
   if (
     date.getUTCDay() === 0
   ) {
     return false;
   }
 
+
   const text =
     normalize(celebration);
+
+
+  /*
+    Se o calendário BRASILEIRO
+    identifica claramente uma
+    semana ferial, não consultamos
+    o Santoral português.
+  */
 
   if (
     text.includes("SEMANA DO TEMPO COMUM") ||
     text.includes("SEMANA DO ADVENTO") ||
-    text.includes("SEMANA DA QUARESMA")
+    text.includes("SEMANA DA QUARESMA") ||
+    text.includes("SEMANA DO TEMPO PASCAL")
   ) {
     return false;
   }
+
 
   if (
     text.includes("FESTA") ||
@@ -380,6 +409,7 @@ function isProperCelebration(
   ) {
     return true;
   }
+
 
   if (
     text.includes("VIRGEM MARIA") ||
@@ -391,6 +421,7 @@ function isProperCelebration(
   ) {
     return true;
   }
+
 
   return false;
 }
@@ -497,26 +528,21 @@ async function extractPages(buffer) {
   const pages = [];
 
   await pdfParse(buffer, {
-    pagerender: async function (pageData) {
-      const content =
-        await pageData.getTextContent();
+    pagerender:
+      async function(pageData) {
 
-      const text =
-        content.items
-          .map(item => item.str)
-          .join(" ");
+        const content =
+          await pageData.getTextContent();
 
-      /*
-        IMPORTANTE:
-        nesta versão usamos push().
-        O pdf-parse percorre as páginas
-        em sequência.
-      */
+        const text =
+          content.items
+            .map(item => item.str)
+            .join(" ");
 
-      pages.push(text);
+        pages.push(text);
 
-      return text;
-    }
+        return text;
+      }
   });
 
   return pages;
@@ -539,6 +565,7 @@ async function findPage(
       .filter(Boolean)
       .map(normalize);
 
+
   for (
     let i = 0;
     i < pages.length;
@@ -560,6 +587,7 @@ async function findPage(
     }
   }
 
+
   return -1;
 }
 
@@ -568,9 +596,7 @@ async function findPage(
    SANTORAL
 ========================= */
 
-async function findSantoral(
-  date
-) {
+async function findSantoral(date) {
   const buffer =
     await fetchPdf(
       URLS.ferial.santoral
@@ -585,12 +611,13 @@ async function findSantoral(
   const month =
     monthName(date);
 
-  /*
-    Exige a data exata.
 
-    Assim "7 DE SETEMBRO"
-    não pode mais coincidir
-    com "27 DE SETEMBRO".
+  /*
+    DATA EXATA.
+
+    Assim 7 de setembro
+    NÃO corresponde a
+    27 de setembro.
   */
 
   const exactDateRegex =
@@ -598,6 +625,7 @@ async function findSantoral(
       `(^|[^0-9])${day}\\s+DE\\s+${month}([^A-Z0-9]|$)`,
       "i"
     );
+
 
   for (
     let i = 0;
@@ -619,6 +647,7 @@ async function findSantoral(
     }
   }
 
+
   return {
     buffer,
     pageIndex: -1
@@ -638,6 +667,7 @@ async function findFerial(
     getSeason(celebration);
 
   let url;
+
 
   if (
     season === "advento"
@@ -674,18 +704,88 @@ async function findFerial(
         : URLS.ferial.comumImpar;
   }
 
+
   const buffer =
     await fetchPdf(url);
 
-  const weekday =
-    weekdayName(date);
 
   const week =
     getWeekNumber(
       celebration
     );
 
+
+  /*
+    TEMPO COMUM:
+
+    Localizamos a SEGUNDA-FEIRA
+    da semana e avançamos conforme
+    o dia da semana.
+
+    Exemplo:
+    Semana XXII:
+      segunda 129
+      terça   130
+      quarta  131
+      quinta  132
+      sexta   133
+      sábado  134
+  */
+
+  if (
+    season === "comum" &&
+    week
+  ) {
+
+    const roman =
+      toRoman(week);
+
+
+    const mondayIndex =
+      await findPage(
+        buffer,
+        [
+          `SEMANA ${roman}`,
+          "SEGUNDA-FEIRA"
+        ]
+      );
+
+
+    if (
+      mondayIndex === -1
+    ) {
+      return {
+        buffer,
+        pageIndex: -1
+      };
+    }
+
+
+    const pageIndex =
+      mondayIndex +
+      weekdayOffset(date);
+
+
+    return {
+      buffer,
+      pageIndex
+    };
+  }
+
+
+  /*
+    OUTROS TEMPOS:
+
+    Mantemos inicialmente a busca
+    pelo dia correspondente.
+  */
+
+  const weekday =
+    weekdayName(date);
+
+
   const patterns = [];
+
 
   if (week) {
     patterns.push(
@@ -693,15 +793,18 @@ async function findFerial(
     );
   }
 
+
   patterns.push(
     weekday
   );
+
 
   const pageIndex =
     await findPage(
       buffer,
       patterns
     );
+
 
   return {
     buffer,
@@ -711,7 +814,7 @@ async function findFerial(
 
 
 /* =========================
-   DOMINGO
+   DOMINGOS
 ========================= */
 
 async function findSunday(
@@ -731,13 +834,16 @@ async function findSunday(
     group[season] ||
     group.comum;
 
+
   const buffer =
     await fetchPdf(url);
+
 
   const number =
     getSundayNumber(
       celebration
     );
+
 
   if (!number) {
     throw new Error(
@@ -745,11 +851,14 @@ async function findSunday(
     );
   }
 
+
   const roman =
     toRoman(number);
 
+
   const patterns =
     [`DOMINGO ${roman}`];
+
 
   if (
     season === "comum"
@@ -759,11 +868,13 @@ async function findSunday(
     );
   }
 
+
   const pageIndex =
     await findPage(
       buffer,
       patterns
     );
+
 
   return {
     buffer,
@@ -785,6 +896,7 @@ async function singlePagePdf(
       buffer
     );
 
+
   if (
     pageIndex < 0 ||
     pageIndex >=
@@ -795,8 +907,10 @@ async function singlePagePdf(
     );
   }
 
+
   const output =
     await PDFDocument.create();
+
 
   const [page] =
     await output.copyPages(
@@ -804,10 +918,13 @@ async function singlePagePdf(
       [pageIndex]
     );
 
+
   output.addPage(page);
+
 
   const bytes =
     await output.save();
+
 
   return Buffer.from(bytes);
 }
@@ -823,10 +940,12 @@ async function handler(req, res) {
   const rawDate =
     req.query.date;
 
+
   const date =
     parseISODate(
       rawDate
     );
+
 
   if (!date) {
     return res
@@ -837,11 +956,12 @@ async function handler(req, res) {
       });
   }
 
+
   try {
 
     /*
-      1. O calendário brasileiro
-         define a celebração.
+      PRIMEIRO:
+      calendário brasileiro.
     */
 
     const celebration =
@@ -849,31 +969,34 @@ async function handler(req, res) {
         date
       );
 
+
     let result;
 
 
     /*
-      2. DOMINGO PRIMEIRO.
+      DOMINGO PRIMEIRO.
 
-      Um santo comum nunca deve
-      substituir o domingo.
+      Santo comum nunca
+      substitui domingo.
     */
 
     if (
       date.getUTCDay() === 0
     ) {
+
       result =
         await findSunday(
           date,
           celebration
         );
+
     }
 
 
     /*
-      3. DIA DE SEMANA COM
-         CELEBRAÇÃO PRÓPRIA
-         NO CALENDÁRIO BRASILEIRO.
+      DIA DE SEMANA COM
+      CELEBRAÇÃO PRÓPRIA
+      NO BRASIL.
     */
 
     else if (
@@ -882,42 +1005,40 @@ async function handler(req, res) {
         date
       )
     ) {
+
       result =
         await findSantoral(
           date
         );
 
-      /*
-        Se não houver formulário
-        próprio correspondente no
-        PDF português, não escolhemos
-        outro santo por engano.
-
-        Fazemos fallback ferial.
-      */
 
       if (
         result.pageIndex === -1
       ) {
+
         result =
           await findFerial(
             date,
             celebration
           );
+
       }
+
     }
 
 
     /*
-      4. DIA FERIAL NORMAL.
+      FERIAL NORMAL.
     */
 
     else {
+
       result =
         await findFerial(
           date,
           celebration
         );
+
     }
 
 
@@ -925,6 +1046,7 @@ async function handler(req, res) {
       !result ||
       result.pageIndex === -1
     ) {
+
       return res
         .status(404)
         .json({
@@ -934,6 +1056,7 @@ async function handler(req, res) {
             rawDate,
           celebration
         });
+
     }
 
 
