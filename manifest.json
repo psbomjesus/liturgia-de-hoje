@@ -1,0 +1,8 @@
+{
+  "name": "Liturgia de Hoje",
+  "short_name": "Liturgia",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f3ec",
+  "theme_color": "#f7f3ec"
+}
