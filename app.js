@@ -1,27 +1,6 @@
 let currentDate = new Date();
 currentDate.setHours(12, 0, 0, 0);
 
-
-/* =========================
-   REMOVE A BOLINHA ANTIGA
-   VERDE E FIXA
-========================= */
-
-const liturgicalDotStyle =
-  document.createElement("style");
-
-liturgicalDotStyle.textContent = `
-  #meta::before {
-    content: none !important;
-    display: none !important;
-  }
-`;
-
-document.head.appendChild(
-  liturgicalDotStyle
-);
-
-
 const weekdays = [
   "DOMINGO",
   "SEGUNDA-FEIRA",
@@ -40,41 +19,84 @@ const weekdays = [
 function isoDate(date) {
   return [
     date.getFullYear(),
-    String(
-      date.getMonth() + 1
-    ).padStart(2, "0"),
-    String(
-      date.getDate()
-    ).padStart(2, "0")
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0")
   ].join("-");
 }
 
 
 function formatDateBR(date) {
-  return new Intl.DateTimeFormat(
-    "pt-BR",
-    {
-      day: "numeric",
-      month: "long",
-      year: "numeric"
-    }
-  ).format(date);
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  }).format(date);
 }
 
 
 function cloneDate(date) {
-  const copy =
-    new Date(date);
-
-  copy.setHours(
-    12,
-    0,
-    0,
-    0
-  );
-
+  const copy = new Date(date);
+  copy.setHours(12, 0, 0, 0);
   return copy;
 }
+
+
+/*
+  Converte 2026-12-15
+  em uma data local.
+
+  Fazemos assim para evitar que
+  o navegador mude o dia por
+  causa do fuso horário.
+*/
+
+function dateFromISO(value) {
+
+  if (!value) {
+    return null;
+  }
+
+  const parts =
+    value.split("-");
+
+  if (parts.length !== 3) {
+    return null;
+  }
+
+  const year =
+    Number(parts[0]);
+
+  const month =
+    Number(parts[1]);
+
+  const day =
+    Number(parts[2]);
+
+
+  const date =
+    new Date(
+      year,
+      month - 1,
+      day,
+      12,
+      0,
+      0,
+      0
+    );
+
+
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+    return null;
+  }
+
+
+  return date;
+}
+
 
 
 /* =========================
@@ -82,7 +104,9 @@ function cloneDate(date) {
 ========================= */
 
 function getElements() {
+
   return {
+
     weekday:
       document.getElementById(
         "weekday"
@@ -101,6 +125,11 @@ function getElements() {
     meta:
       document.getElementById(
         "meta"
+      ),
+
+    datePicker:
+      document.getElementById(
+        "datePicker"
       ),
 
     liturgiaCard:
@@ -136,38 +165,36 @@ function getElements() {
 }
 
 
+
 /* =========================
    COR LITÚRGICA
 ========================= */
 
-function liturgicalColor(
-  colorName
-) {
+function liturgicalColor(colorName) {
+
   const color =
-    String(
-      colorName || ""
-    )
+    String(colorName || "")
       .trim()
       .toLowerCase();
 
 
   if (color === "verde") {
+
     return {
-      background:
-        "#5d8f67",
-      border:
-        "#5d8f67"
+      background: "#5d8f67",
+      border: "#5d8f67"
     };
+
   }
 
 
   if (color === "branco") {
+
     return {
-      background:
-        "#ffffff",
-      border:
-        "#aaa39a"
+      background: "#ffffff",
+      border: "#b9b3ab"
     };
+
   }
 
 
@@ -175,69 +202,49 @@ function liturgicalColor(
     color === "roxo" ||
     color === "violeta"
   ) {
+
     return {
-      background:
-        "#76508d",
-      border:
-        "#76508d"
+      background: "#76508d",
+      border: "#76508d"
     };
+
   }
 
 
-  if (
-    color === "vermelho"
-  ) {
+  if (color === "vermelho") {
+
     return {
-      background:
-        "#b94a48",
-      border:
-        "#b94a48"
+      background: "#b94a48",
+      border: "#b94a48"
     };
+
   }
 
 
-  /*
-    Rosa pode ocorrer
-    no Domingo Gaudete
-    ou no Domingo Laetare.
-  */
+  if (color === "rosa") {
 
-  if (
-    color === "rosa" ||
-    color === "róseo" ||
-    color === "roseo"
-  ) {
     return {
-      background:
-        "#c98b9e",
-      border:
-        "#c98b9e"
+      background: "#c98b9e",
+      border: "#c98b9e"
     };
+
   }
 
-
-  /*
-    Caso apareça alguma cor
-    inesperada, usamos um tom
-    neutro em vez de verde.
-  */
 
   return {
-    background:
-      "#8a8279",
-    border:
-      "#8a8279"
+    background: "#8a8279",
+    border: "#8a8279"
   };
 }
+
 
 
 /* =========================
    CABEÇALHO AUTOMÁTICO
 ========================= */
 
-async function renderHeader(
-  date
-) {
+async function renderHeader(date) {
+
   const els =
     getElements();
 
@@ -245,29 +252,50 @@ async function renderHeader(
     isoDate(date);
 
 
+  /*
+    Mantém o calendário sincronizado
+    com o dia que está sendo exibido.
+  */
+
+  if (els.datePicker) {
+
+    els.datePicker.value =
+      iso;
+
+  }
+
+
   if (els.weekday) {
+
     els.weekday.textContent =
       weekdays[
         date.getDay()
       ];
+
   }
 
 
   if (els.date) {
+
     els.date.textContent =
       formatDateBR(date);
+
   }
 
 
   if (els.celebration) {
+
     els.celebration.textContent =
       "Carregando celebração...";
+
   }
 
 
   if (els.meta) {
+
     els.meta.textContent =
       "Carregando dados litúrgicos...";
+
   }
 
 
@@ -276,20 +304,19 @@ async function renderHeader(
     const response =
       await fetch(
         "/api/day?date=" +
-        encodeURIComponent(
-          iso
-        ),
+        encodeURIComponent(iso),
         {
-          cache:
-            "no-store"
+          cache: "no-store"
         }
       );
 
 
     if (!response.ok) {
+
       throw new Error(
         "Não foi possível carregar os dados litúrgicos."
       );
+
     }
 
 
@@ -297,68 +324,55 @@ async function renderHeader(
       await response.json();
 
 
-    /*
-      NOME DA CELEBRAÇÃO
-    */
-
     if (els.celebration) {
+
       els.celebration.textContent =
         data.celebration ||
         "Liturgia do dia";
+
     }
 
 
-    /*
-      MONTA:
-      Festa · Branco
-
-      ou:
-      Verde
-
-      ou:
-      Domingo · Verde · Ano A
-    */
-
-    const metaParts = [];
+    const metaParts =
+      [];
 
 
     if (data.rank) {
+
       metaParts.push(
         data.rank
       );
+
     }
 
 
     if (data.color) {
+
       metaParts.push(
         data.color
       );
+
     }
 
 
     if (data.cycle) {
+
       metaParts.push(
         "Ano " +
         data.cycle
       );
+
     }
 
 
     if (els.meta) {
-
-      /*
-        IMPORTANTE:
-        apaga tudo o que estava
-        anteriormente no campo.
-      */
 
       els.meta.innerHTML =
         "";
 
 
       /*
-        CRIA SOMENTE UMA
-        BOLINHA LITÚRGICA.
+        BOLINHA DA COR LITÚRGICA
       */
 
       if (data.color) {
@@ -375,64 +389,57 @@ async function renderHeader(
           );
 
 
-        dot.className =
-          "liturgical-color-dot";
-
-
         dot.style.display =
           "inline-block";
-
 
         dot.style.width =
           "17px";
 
-
         dot.style.height =
           "17px";
-
-
-        dot.style.minWidth =
-          "17px";
-
 
         dot.style.borderRadius =
           "50%";
 
-
-        dot.style.backgroundColor =
+        dot.style.background =
           colors.background;
-
 
         dot.style.border =
           "1.5px solid " +
           colors.border;
 
-
         dot.style.marginRight =
           "8px";
 
-
         dot.style.verticalAlign =
           "-2px";
-
 
         dot.style.boxSizing =
           "border-box";
 
 
-        dot.style.flexShrink =
-          "0";
-
-
         els.meta.appendChild(
           dot
         );
+
+
+        /*
+          A mesma cor é usada
+          na linha fina dos cards.
+        */
+
+        document.documentElement
+          .style
+          .setProperty(
+            "--liturgical-color",
+            colors.background
+          );
+
       }
 
 
       /*
-        TEXTO AO LADO
-        DA BOLINHA
+        TEXTO AO LADO DA BOLINHA
       */
 
       const text =
@@ -443,9 +450,7 @@ async function renderHeader(
 
       text.textContent =
         metaParts.length
-          ? metaParts.join(
-              " · "
-            )
+          ? metaParts.join(" · ")
           : (
               data.season ||
               "Calendário litúrgico"
@@ -455,10 +460,12 @@ async function renderHeader(
       els.meta.appendChild(
         text
       );
+
     }
 
+  }
 
-  } catch (error) {
+  catch (error) {
 
     console.error(
       "Erro ao carregar cabeçalho:",
@@ -466,36 +473,38 @@ async function renderHeader(
     );
 
 
-    if (
-      els.celebration
-    ) {
+    if (els.celebration) {
+
       els.celebration.textContent =
         "Liturgia do dia";
+
     }
 
 
     if (els.meta) {
+
       els.meta.textContent =
         "Dados litúrgicos indisponíveis";
+
     }
+
   }
+
 }
+
 
 
 /* =========================
    LITURGIA
 ========================= */
 
-function renderLiturgia(
-  date
-) {
+function renderLiturgia(date) {
+
   const els =
     getElements();
 
 
-  if (
-    !els.liturgiaCard
-  ) {
+  if (!els.liturgiaCard) {
     return;
   }
 
@@ -511,7 +520,9 @@ function renderLiturgia(
 
 
   if (old) {
+
     old.remove();
+
   }
 
 
@@ -534,7 +545,6 @@ function renderLiturgia(
   info.style.color =
     "#746d64";
 
-
   info.style.lineHeight =
     "1.55";
 
@@ -556,9 +566,7 @@ function renderLiturgia(
 
   iframe.src =
     "/api/liturgia?date=" +
-    encodeURIComponent(
-      iso
-    );
+    encodeURIComponent(iso);
 
 
   iframe.title =
@@ -603,25 +611,27 @@ function renderLiturgia(
 
   placeholders.forEach(
     element => {
+
       element.remove();
+
     }
   );
 
 
-  els.liturgiaCard
-    .appendChild(
-      wrapper
-    );
+  els.liturgiaCard.appendChild(
+    wrapper
+  );
+
 }
+
 
 
 /* =========================
    ORAÇÃO DOS FIÉIS
 ========================= */
 
-function renderPrayer(
-  date
-) {
+function renderPrayer(date) {
+
   const els =
     getElements();
 
@@ -639,12 +649,12 @@ function renderPrayer(
     "";
 
 
-  if (
-    els.prayerStatus
-  ) {
+  if (els.prayerStatus) {
+
     els.prayerStatus.innerHTML =
       "<strong>Oração dos Fiéis do dia</strong><br>" +
       "Formulário correspondente à celebração litúrgica desta data.";
+
   }
 
 
@@ -655,23 +665,15 @@ function renderPrayer(
 
 
   /*
-    Enquanto estamos testando,
-    usamos uma versão diferente
-    para evitar PDF antigo
-    guardado no navegador.
+    Mantemos sem cache durante
+    esta fase de testes.
   */
-
-  const version =
-    Date.now();
-
 
   iframe.src =
     "/api/prayer?date=" +
-    encodeURIComponent(
-      iso
-    ) +
+    encodeURIComponent(iso) +
     "&v=" +
-    version;
+    Date.now();
 
 
   iframe.title =
@@ -728,11 +730,9 @@ function renderPrayer(
   fallback.innerHTML =
     'Se o visualizador não carregar, ' +
     '<a href="/api/prayer?date=' +
-    encodeURIComponent(
-      iso
-    ) +
+    encodeURIComponent(iso) +
     '&v=' +
-    version +
+    Date.now() +
     '" target="_blank" rel="noopener">' +
     'toque aqui para abrir a oração deste dia</a>.';
 
@@ -740,7 +740,9 @@ function renderPrayer(
   els.pdfArea.appendChild(
     fallback
   );
+
 }
+
 
 
 /* =========================
@@ -748,6 +750,7 @@ function renderPrayer(
 ========================= */
 
 function render() {
+
   renderHeader(
     currentDate
   );
@@ -759,7 +762,9 @@ function render() {
   renderPrayer(
     currentDate
   );
+
 }
+
 
 
 /* =========================
@@ -767,24 +772,31 @@ function render() {
 ========================= */
 
 function previousDay() {
+
   currentDate.setDate(
     currentDate.getDate() - 1
   );
 
+
   render();
+
 }
 
 
 function nextDay() {
+
   currentDate.setDate(
     currentDate.getDate() + 1
   );
 
+
   render();
+
 }
 
 
 function goToday() {
+
   currentDate =
     new Date();
 
@@ -798,7 +810,46 @@ function goToday() {
 
 
   render();
+
 }
+
+
+
+/* =========================
+   ESCOLHER DATA NO CALENDÁRIO
+========================= */
+
+function chooseDate(event) {
+
+  const value =
+    event.target.value;
+
+
+  const selectedDate =
+    dateFromISO(
+      value
+    );
+
+
+  if (!selectedDate) {
+    return;
+  }
+
+
+  currentDate =
+    selectedDate;
+
+
+  /*
+    Carrega imediatamente
+    cabeçalho, Liturgia e Preces
+    da data escolhida.
+  */
+
+  render();
+
+}
+
 
 
 /* =========================
@@ -841,58 +892,33 @@ function preloadNextSevenDays() {
       isoDate(date);
 
 
-    /*
-      DADOS DO DIA
-    */
-
     fetch(
       "/api/day?date=" +
-      encodeURIComponent(
-        iso
-      ),
+      encodeURIComponent(iso),
       {
-        method:
-          "GET",
-
-        cache:
-          "no-store"
+        method: "GET",
+        cache: "no-store"
       }
     ).catch(
       () => {}
     );
 
-
-    /*
-      LITURGIA
-    */
 
     fetch(
       "/api/liturgia?date=" +
-      encodeURIComponent(
-        iso
-      ),
+      encodeURIComponent(iso),
       {
-        method:
-          "GET",
-
-        cache:
-          "force-cache"
+        method: "GET",
+        cache: "force-cache"
       }
     ).catch(
       () => {}
     );
 
-
-    /*
-      Por enquanto não
-      pré-carregamos as preces.
-
-      Isso evita guardar
-      resultados antigos enquanto
-      ainda estamos testando.
-    */
   }
+
 }
+
 
 
 /* =========================
@@ -903,41 +929,55 @@ const els =
   getElements();
 
 
-if (
-  els.prevBtn
-) {
-  els.prevBtn
-    .addEventListener(
-      "click",
-      previousDay
-    );
+if (els.prevBtn) {
+
+  els.prevBtn.addEventListener(
+    "click",
+    previousDay
+  );
+
 }
 
 
-if (
-  els.nextBtn
-) {
-  els.nextBtn
-    .addEventListener(
-      "click",
-      nextDay
-    );
+if (els.nextBtn) {
+
+  els.nextBtn.addEventListener(
+    "click",
+    nextDay
+  );
+
 }
 
 
-if (
-  els.todayBtn
-) {
-  els.todayBtn
-    .addEventListener(
-      "click",
-      goToday
-    );
+if (els.todayBtn) {
+
+  els.todayBtn.addEventListener(
+    "click",
+    goToday
+  );
+
 }
+
+
+/*
+  NOVO:
+  quando uma data é escolhida
+  no calendário.
+*/
+
+if (els.datePicker) {
+
+  els.datePicker.addEventListener(
+    "change",
+    chooseDate
+  );
+
+}
+
 
 
 /* =========================
-   INÍCIO
+   INÍCIO DO APP
 ========================= */
 
 render();
@@ -945,7 +985,9 @@ render();
 
 setTimeout(
   () => {
+
     preloadNextSevenDays();
+
   },
   1000
 );
