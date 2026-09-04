@@ -19,69 +19,21 @@ function isoDate(date){
   ].join("-");
 }
 
-/*
-  PRIMEIRO MÓDULO FUNCIONAL
-  Semana XXII do Tempo Comum de 2026.
-  O PDF é o documento oficial do Secretariado Nacional de Liturgia.
-  Nesta etapa não extraímos, alteramos nem resumimos o conteúdo.
-*/
 const days = {
-  "2026-08-31": {
-    celebration:"Segunda-feira da 22ª Semana do Tempo Comum",
-    meta:"Verde · Ano Litúrgico A · Ciclo ferial: Ano II",
-    prayerLabel:"Segunda-feira da Semana XXII · Tempo Comum · Ano Par"
-  },
-  "2026-09-01": {
-    celebration:"Terça-feira da 22ª Semana do Tempo Comum",
-    meta:"Verde · Ano Litúrgico A · Ciclo ferial: Ano II",
-    prayerLabel:"Terça-feira da Semana XXII · Tempo Comum · Ano Par"
-  },
-  "2026-09-02": {
-    celebration:"Quarta-feira da 22ª Semana do Tempo Comum",
-    meta:"Verde · Ano Litúrgico A · Ciclo ferial: Ano II",
-    prayerLabel:"Quarta-feira da Semana XXII · Tempo Comum · Ano Par"
-  },
-  "2026-09-03": {
-    celebration:"São Gregório Magno, Papa e Doutor da Igreja",
-    meta:"Branco · Ano Litúrgico A · Memória obrigatória",
-    prayerLabel:"3 de setembro · São Gregório Magno"
-  },
-  "2026-09-04": {
-    celebration:"Sexta-feira da 22ª Semana do Tempo Comum",
-    meta:"Verde · Ano Litúrgico A · Ciclo ferial: Ano II",
-    prayerLabel:"Sexta-feira da Semana XXII · Tempo Comum · Ano Par"
-  },
-  "2026-09-05": {
-    celebration:"Sábado da 22ª Semana do Tempo Comum",
-    meta:"Verde · Ano Litúrgico A · Ciclo ferial: Ano II",
-    prayerLabel:"Sábado da Semana XXII · Tempo Comum · Ano Par"
-  }
+  "2026-08-31": {celebration:"Segunda-feira da 22ª Semana do Tempo Comum", meta:"Verde · Ano Litúrgico A · Ciclo ferial: Ano II", prayerLabel:"Segunda-feira da Semana XXII · Tempo Comum · Ano Par"},
+  "2026-09-01": {celebration:"Terça-feira da 22ª Semana do Tempo Comum", meta:"Verde · Ano Litúrgico A · Ciclo ferial: Ano II", prayerLabel:"Terça-feira da Semana XXII · Tempo Comum · Ano Par"},
+  "2026-09-02": {celebration:"Quarta-feira da 22ª Semana do Tempo Comum", meta:"Verde · Ano Litúrgico A · Ciclo ferial: Ano II", prayerLabel:"Quarta-feira da Semana XXII · Tempo Comum · Ano Par"},
+  "2026-09-03": {celebration:"São Gregório Magno, Papa e Doutor da Igreja", meta:"Branco · Ano Litúrgico A · Memória obrigatória", prayerLabel:"3 de setembro · São Gregório Magno"},
+  "2026-09-04": {celebration:"Sexta-feira da 22ª Semana do Tempo Comum", meta:"Verde · Ano Litúrgico A · Ciclo ferial: Ano II", prayerLabel:"Sexta-feira da Semana XXII · Tempo Comum · Ano Par"},
+  "2026-09-05": {celebration:"Sábado da 22ª Semana do Tempo Comum", meta:"Verde · Ano Litúrgico A · Ciclo ferial: Ano II", prayerLabel:"Sábado da Semana XXII · Tempo Comum · Ano Par"}
 };
-
-const ordinaryEvenPdf =
-  "https://liturgia.pt/oracaouniversal/ferial/06UnivFerialSNLTCPar.pdf";
-
-const santoralPdf =
-  "https://liturgia.pt/oracaouniversal/ferial/07UnivFerialSNLSantoral.pdf";
-
-function getPrayerPdf(iso){
-  if(iso === "2026-09-03"){
-    return santoralPdf;
-  }
-  if(days[iso]){
-    return ordinaryEvenPdf;
-  }
-  return null;
-}
 
 function render(){
   const iso = isoDate(currentDate);
   const data = days[iso];
 
-  document.getElementById("weekday").textContent =
-    weekdays[currentDate.getDay()];
-  document.getElementById("date").textContent =
-    formatDateBR(currentDate);
+  document.getElementById("weekday").textContent = weekdays[currentDate.getDay()];
+  document.getElementById("date").textContent = formatDateBR(currentDate);
 
   const celebration = document.getElementById("celebration");
   const meta = document.getElementById("meta");
@@ -95,32 +47,26 @@ function render(){
     meta.textContent = data.meta;
     prayerStatus.innerHTML =
       "<strong>" + data.prayerLabel + "</strong><br>" +
-      "Documento oficial exibido abaixo, sem alterações.";
+      "Página oficial do Secretariado Nacional de Liturgia, sem alterações.";
 
-    const pdf = getPrayerPdf(iso);
+    const iframe = document.createElement("iframe");
+    iframe.src = "/api/prayer?date=" + encodeURIComponent(iso);
+    iframe.title = "Oração Universal oficial do dia";
+    iframe.loading = "lazy";
+    pdfArea.appendChild(iframe);
 
-    if(pdf){
-      const iframe = document.createElement("iframe");
-      iframe.src = pdf + "#view=FitH";
-      iframe.title = "Oração Universal oficial";
-      iframe.loading = "lazy";
-      pdfArea.appendChild(iframe);
-
-      const fallback = document.createElement("p");
-      fallback.style.fontSize = "13px";
-      fallback.style.color = "#746d64";
-      fallback.innerHTML =
-        'Se o iPhone não exibir o PDF dentro desta área, ' +
-        '<a href="' + pdf + '" target="_blank" rel="noopener">toque aqui para abrir o documento oficial</a>.';
-      pdfArea.appendChild(fallback);
-    }
+    const fallback = document.createElement("p");
+    fallback.style.fontSize = "13px";
+    fallback.style.color = "#746d64";
+    fallback.innerHTML =
+      'Se o visualizador não carregar, ' +
+      '<a href="/api/prayer?date=' + encodeURIComponent(iso) + '" target="_blank" rel="noopener">' +
+      'toque aqui para abrir somente a página oficial deste dia</a>.';
+    pdfArea.appendChild(fallback);
   } else {
-    celebration.textContent =
-      "Celebração a identificar automaticamente";
-    meta.textContent =
-      "Calendário litúrgico automático em expansão";
-    prayerStatus.textContent =
-      "Esta data ainda não foi incluída nesta primeira etapa funcional.";
+    celebration.textContent = "Celebração a identificar automaticamente";
+    meta.textContent = "Calendário litúrgico automático em expansão";
+    prayerStatus.textContent = "Esta data ainda não foi incluída nesta primeira etapa funcional.";
   }
 }
 
