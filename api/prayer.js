@@ -316,12 +316,6 @@ function getWeekNumber(
   const text =
     normalize(celebration);
 
-  /*
-    Exemplo brasileiro:
-    2ª feira da 23ª Semana
-    do Tempo Comum
-  */
-
   const match =
     text.match(
       /(\d+)[ªº]?\s+SEMANA/
@@ -340,11 +334,6 @@ function getSundayNumber(
 ) {
   const text =
     normalize(celebration);
-
-  /*
-    Exemplo:
-    23º Domingo do Tempo Comum
-  */
 
   const match =
     text.match(
@@ -367,28 +356,14 @@ function isProperCelebration(
   celebration,
   date
 ) {
-  /*
-    DOMINGO TEM PRIORIDADE.
-
-    Portanto um santo comum jamais
-    substitui o domingo.
-  */
-
   if (
     date.getUTCDay() === 0
   ) {
     return false;
   }
 
-
   const text =
     normalize(celebration);
-
-
-  /*
-    Se o próprio calendário brasileiro
-    diz que é ferial, não usamos Santoral.
-  */
 
   if (
     text.includes("SEMANA DO TEMPO COMUM") ||
@@ -398,12 +373,6 @@ function isProperCelebration(
     return false;
   }
 
-
-  /*
-    Celebrações expressamente apresentadas
-    pelo calendário brasileiro.
-  */
-
   if (
     text.includes("FESTA") ||
     text.includes("SOLENIDADE") ||
@@ -411,13 +380,6 @@ function isProperCelebration(
   ) {
     return true;
   }
-
-
-  /*
-    Alguns títulos do Pocket Terço podem
-    trazer o nome próprio sem repetir
-    a palavra Festa/Memória.
-  */
 
   if (
     text.includes("VIRGEM MARIA") ||
@@ -429,7 +391,6 @@ function isProperCelebration(
   ) {
     return true;
   }
-
 
   return false;
 }
@@ -532,38 +493,30 @@ async function fetchPdf(url) {
    EXTRAIR PÁGINAS
 ========================= */
 
-async function extractPages(
-  buffer
-) {
+async function extractPages(buffer) {
   const pages = [];
 
   await pdfParse(buffer, {
-    pagerender:
-      async function(pageData) {
+    pagerender: async function (pageData) {
+      const content =
+        await pageData.getTextContent();
 
-        const pageNumber =
-          pageData.pageIndex + 1;
+      const text =
+        content.items
+          .map(item => item.str)
+          .join(" ");
 
-        const content =
-          await pageData.getTextContent();
+      /*
+        IMPORTANTE:
+        nesta versão usamos push().
+        O pdf-parse percorre as páginas
+        em sequência.
+      */
 
-        const text =
-          content.items
-            .map(item => item.str)
-            .join(" ");
+      pages.push(text);
 
-        /*
-          Guardamos pelo número real
-          da página, e não apenas usando
-          push().
-        */
-
-        pages[
-          pageNumber - 1
-        ] = text;
-
-        return text;
-      }
+      return text;
+    }
   });
 
   return pages;
@@ -586,7 +539,6 @@ async function findPage(
       .filter(Boolean)
       .map(normalize);
 
-
   for (
     let i = 0;
     i < pages.length;
@@ -608,7 +560,6 @@ async function findPage(
     }
   }
 
-
   return -1;
 }
 
@@ -618,18 +569,15 @@ async function findPage(
 ========================= */
 
 async function findSantoral(
-  date,
-  celebration
+  date
 ) {
   const buffer =
     await fetchPdf(
       URLS.ferial.santoral
     );
 
-
   const pages =
     await extractPages(buffer);
-
 
   const day =
     date.getUTCDate();
@@ -637,18 +585,12 @@ async function findSantoral(
   const month =
     monthName(date);
 
-
   /*
-    MUITO IMPORTANTE:
+    Exige a data exata.
 
-    Antes:
-       "7 DE SETEMBRO"
-
-    encontrava também:
-       "27 DE SETEMBRO"
-
-    Agora verificamos a data
-    com limite numérico.
+    Assim "7 DE SETEMBRO"
+    não pode mais coincidir
+    com "27 DE SETEMBRO".
   */
 
   const exactDateRegex =
@@ -657,18 +599,15 @@ async function findSantoral(
       "i"
     );
 
-
   for (
     let i = 0;
     i < pages.length;
     i++
   ) {
-
     const text =
       normalize(
         pages[i] || ""
       );
-
 
     if (
       exactDateRegex.test(text)
@@ -679,13 +618,6 @@ async function findSantoral(
       };
     }
   }
-
-
-  /*
-    Se não houver página própria
-    daquela data no Santoral,
-    não inventamos uma.
-  */
 
   return {
     buffer,
@@ -706,7 +638,6 @@ async function findFerial(
     getSeason(celebration);
 
   let url;
-
 
   if (
     season === "advento"
@@ -743,23 +674,18 @@ async function findFerial(
         : URLS.ferial.comumImpar;
   }
 
-
   const buffer =
     await fetchPdf(url);
 
-
   const weekday =
     weekdayName(date);
-
 
   const week =
     getWeekNumber(
       celebration
     );
 
-
   const patterns = [];
-
 
   if (week) {
     patterns.push(
@@ -767,18 +693,15 @@ async function findFerial(
     );
   }
 
-
   patterns.push(
     weekday
   );
-
 
   const pageIndex =
     await findPage(
       buffer,
       patterns
     );
-
 
   return {
     buffer,
@@ -801,25 +724,20 @@ async function findSunday(
   const season =
     getSeason(celebration);
 
-
   const group =
     URLS.domingo[cycle];
-
 
   const url =
     group[season] ||
     group.comum;
 
-
   const buffer =
     await fetchPdf(url);
-
 
   const number =
     getSundayNumber(
       celebration
     );
-
 
   if (!number) {
     throw new Error(
@@ -827,14 +745,11 @@ async function findSunday(
     );
   }
 
-
   const roman =
     toRoman(number);
 
-
   const patterns =
     [`DOMINGO ${roman}`];
-
 
   if (
     season === "comum"
@@ -844,13 +759,11 @@ async function findSunday(
     );
   }
 
-
   const pageIndex =
     await findPage(
       buffer,
       patterns
     );
-
 
   return {
     buffer,
@@ -872,7 +785,6 @@ async function singlePagePdf(
       buffer
     );
 
-
   if (
     pageIndex < 0 ||
     pageIndex >=
@@ -883,10 +795,8 @@ async function singlePagePdf(
     );
   }
 
-
   const output =
     await PDFDocument.create();
-
 
   const [page] =
     await output.copyPages(
@@ -894,13 +804,10 @@ async function singlePagePdf(
       [pageIndex]
     );
 
-
   output.addPage(page);
-
 
   const bytes =
     await output.save();
-
 
   return Buffer.from(bytes);
 }
@@ -916,30 +823,25 @@ async function handler(req, res) {
   const rawDate =
     req.query.date;
 
-
   const date =
     parseISODate(
       rawDate
     );
 
-
   if (!date) {
-
     return res
       .status(400)
       .json({
         error:
           "Informe uma data válida em ?date=AAAA-MM-DD"
       });
-
   }
-
 
   try {
 
     /*
-      1. PRIMEIRO descobrimos
-         o que o BRASIL celebra.
+      1. O calendário brasileiro
+         define a celebração.
     */
 
     const celebration =
@@ -947,32 +849,31 @@ async function handler(req, res) {
         date
       );
 
-
     let result;
 
 
     /*
-      2. DOMINGO tem prioridade.
+      2. DOMINGO PRIMEIRO.
+
+      Um santo comum nunca deve
+      substituir o domingo.
     */
 
     if (
       date.getUTCDay() === 0
     ) {
-
       result =
         await findSunday(
           date,
           celebration
         );
-
     }
 
 
     /*
-      3. DIA DE SEMANA:
-         só tenta Santoral quando
-         o calendário brasileiro
-         apresenta celebração própria.
+      3. DIA DE SEMANA COM
+         CELEBRAÇÃO PRÓPRIA
+         NO CALENDÁRIO BRASILEIRO.
     */
 
     else if (
@@ -981,49 +882,42 @@ async function handler(req, res) {
         date
       )
     ) {
-
       result =
         await findSantoral(
-          date,
-          celebration
+          date
         );
 
-
       /*
-        Se Portugal não possui
-        formulário próprio para
-        essa celebração brasileira,
-        fazemos fallback para ferial
-        em vez de escolher outro santo.
+        Se não houver formulário
+        próprio correspondente no
+        PDF português, não escolhemos
+        outro santo por engano.
+
+        Fazemos fallback ferial.
       */
 
       if (
         result.pageIndex === -1
       ) {
-
         result =
           await findFerial(
             date,
             celebration
           );
-
       }
-
     }
 
 
     /*
-      4. FERIAL NORMAL.
+      4. DIA FERIAL NORMAL.
     */
 
     else {
-
       result =
         await findFerial(
           date,
           celebration
         );
-
     }
 
 
@@ -1031,7 +925,6 @@ async function handler(req, res) {
       !result ||
       result.pageIndex === -1
     ) {
-
       return res
         .status(404)
         .json({
@@ -1041,7 +934,6 @@ async function handler(req, res) {
             rawDate,
           celebration
         });
-
     }
 
 
