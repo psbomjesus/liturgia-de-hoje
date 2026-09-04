@@ -6,12 +6,6 @@ module.exports = async function handler(req, res) {
       return res.status(400).send("Data inválida.");
     }
 
-    /*
-      Transforma:
-      2026-09-04
-      em:
-      04/09/2026
-    */
     const [year, month, day] = date.split("-");
 
     const source =
@@ -36,9 +30,71 @@ module.exports = async function handler(req, res) {
     let html = await response.text();
 
 
-    /* =========================
-       LIMPEZA INICIAL
-    ========================= */
+    /* =========================================
+       REMOVE BLOCOS DO YOUTUBE ANTES DE TUDO
+    ========================================= */
+
+    /*
+      O Pocket Terço coloca vídeos no meio
+      da liturgia.
+
+      Não basta apagar somente o iframe,
+      porque o contêiner pode continuar
+      aparecendo como uma caixa ou barra.
+
+      Por isso removemos primeiro blocos
+      completos que contenham YouTube.
+    */
+
+    const youtubeBlockPatterns = [
+
+      /<figure\b[^>]*>[\s\S]*?(?:youtube\.com|youtu\.be)[\s\S]*?<\/figure>/gi,
+
+      /<section\b[^>]*>[\s\S]*?(?:youtube\.com|youtu\.be)[\s\S]*?<\/section>/gi,
+
+      /<p\b[^>]*>[\s\S]*?(?:youtube\.com|youtu\.be)[\s\S]*?<\/p>/gi
+    ];
+
+    for (const pattern of youtubeBlockPatterns) {
+      html = html.replace(pattern, "");
+    }
+
+
+    /*
+      Remove DIVs que contenham diretamente
+      um iframe do YouTube.
+    */
+
+    html = html.replace(
+      /<div\b[^>]*>\s*<iframe\b[^>]*(?:youtube\.com|youtu\.be)[^>]*>[\s\S]*?<\/iframe>\s*<\/div>/gi,
+      ""
+    );
+
+
+    /*
+      Remove iframe do YouTube que ainda
+      tenha permanecido.
+    */
+
+    html = html.replace(
+      /<iframe\b[^>]*(?:youtube\.com|youtu\.be)[^>]*>[\s\S]*?<\/iframe>/gi,
+      ""
+    );
+
+
+    /*
+      Remove também URLs soltas do YouTube.
+    */
+
+    html = html.replace(
+      /https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\/[^\s<"']+/gi,
+      ""
+    );
+
+
+    /* =========================================
+       LIMPEZA GERAL
+    ========================================= */
 
     html = html
       .replace(
@@ -55,9 +111,9 @@ module.exports = async function handler(req, res) {
       );
 
 
-    /* =========================
-       LOCALIZA A LITURGIA
-    ========================= */
+    /* =========================================
+       LOCALIZA A LITURGIA DA PALAVRA
+    ========================================= */
 
     const startPatterns = [
       "Primeira Leitura",
@@ -77,6 +133,13 @@ module.exports = async function handler(req, res) {
     }
 
 
+    if (start === -1) {
+      throw new Error(
+        "Não foi possível localizar a Primeira Leitura."
+      );
+    }
+
+
     const endPatterns = [
       "Antífona do Ofertório",
       "Sobre as Oferendas",
@@ -89,25 +152,20 @@ module.exports = async function handler(req, res) {
     for (const pattern of endPatterns) {
       const index = html.indexOf(pattern, start);
 
-      if (index !== -1) {
-        if (end === -1 || index < end) {
-          end = index;
-        }
+      if (
+        index !== -1 &&
+        (end === -1 || index < end)
+      ) {
+        end = index;
       }
     }
 
 
-    if (start === -1) {
-      throw new Error(
-        "Não foi possível localizar a Primeira Leitura."
-      );
-    }
-
-
     /*
-      Preserva a tag que contém
-      o título da Primeira Leitura.
+      Preserva a tag do título
+      da Primeira Leitura.
     */
+
     const tagStart =
       html.lastIndexOf("<", start);
 
@@ -133,9 +191,9 @@ module.exports = async function handler(req, res) {
       html.slice(start, end);
 
 
-    /* =========================
-       REMOVE MÍDIAS
-    ========================= */
+    /* =========================================
+       REMOVE QUALQUER MÍDIA RESTANTE
+    ========================================= */
 
     liturgia = liturgia
       .replace(
@@ -160,68 +218,61 @@ module.exports = async function handler(req, res) {
       );
 
 
-    /* =========================
-       REMOVE BLOCOS DO PLAYER
-    ========================= */
+    /* =========================================
+       REMOVE ESTILOS ORIGINAIS
+       DOS ELEMENTOS
+    ========================================= */
 
     /*
-      O iframe do vídeo pode desaparecer,
-      mas a caixa que o envolve pode continuar.
+      Isso impede que algum contêiner
+      que sobrou mantenha altura,
+      fundo azul ou proporção de vídeo.
 
-      Aqui removemos blocos identificados
-      como vídeo, YouTube, embed ou player.
+      Não altera o texto litúrgico.
     */
 
     liturgia = liturgia.replace(
-      /<(div|section|figure)\b[^>]*(?:class|id)=["'][^"']*(?:youtube|video|embed|player)[^"']*["'][^>]*>[\s\S]*?<\/\1>/gi,
+      /\sstyle=(["'])[\s\S]*?\1/gi,
       ""
     );
 
 
-    /*
-      Remove links do YouTube,
-      caso algum permaneça.
-    */
-
-    liturgia = liturgia
-      .replace(
-        /<a\b[^>]*href=["'][^"']*(?:youtube\.com|youtu\.be)[^"']*["'][^>]*>[\s\S]*?<\/a>/gi,
-        ""
-      )
-      .replace(
-        /https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\/[^\s<"']+/gi,
-        ""
-      );
-
+    /* =========================================
+       REMOVE ELEMENTOS VAZIOS
+    ========================================= */
 
     /*
-      Depois de retirar o vídeo,
-      podem sobrar DIVs vazias.
-      Eliminamos essas caixas.
+      Fazemos várias passagens porque,
+      ao retirar um elemento interno,
+      o elemento pai também pode ficar vazio.
     */
 
-    for (let i = 0; i < 6; i++) {
-      liturgia = liturgia.replace(
-        /<div\b[^>]*>\s*(?:&nbsp;|<br\s*\/?>|\s)*<\/div>/gi,
-        ""
-      );
+    for (let i = 0; i < 10; i++) {
+
+      liturgia = liturgia
+        .replace(
+          /<div\b[^>]*>\s*(?:&nbsp;|<br\s*\/?>|\s)*<\/div>/gi,
+          ""
+        )
+        .replace(
+          /<section\b[^>]*>\s*(?:&nbsp;|<br\s*\/?>|\s)*<\/section>/gi,
+          ""
+        )
+        .replace(
+          /<figure\b[^>]*>\s*(?:&nbsp;|<br\s*\/?>|\s)*<\/figure>/gi,
+          ""
+        )
+        .replace(
+          /<p\b[^>]*>\s*(?:&nbsp;|<br\s*\/?>|\s)*<\/p>/gi,
+          ""
+        );
+
     }
 
 
-    liturgia = liturgia
-      .replace(
-        /<section\b[^>]*>\s*(?:&nbsp;|<br\s*\/?>|\s)*<\/section>/gi,
-        ""
-      )
-      .replace(
-        /<figure\b[^>]*>\s*(?:&nbsp;|<br\s*\/?>|\s)*<\/figure>/gi,
-        ""
-      );
-
-
-    /* =========================
+    /* =========================================
        PÁGINA FINAL
-    ========================= */
+    ========================================= */
 
     const page = `
       <!doctype html>
@@ -245,12 +296,14 @@ module.exports = async function handler(req, res) {
             box-sizing: border-box;
           }
 
+
           html,
           body {
             margin: 0;
             padding: 0;
             background: #ffffff;
           }
+
 
           body {
             font-family:
@@ -261,17 +314,13 @@ module.exports = async function handler(req, res) {
               sans-serif;
 
             color: #292621;
+
             line-height: 1.7;
 
             padding:
               12px 18px 30px 18px;
           }
 
-
-          /*
-            Não mostrar mídias
-            ou elementos externos.
-          */
 
           header,
           nav,
@@ -283,14 +332,16 @@ module.exports = async function handler(req, res) {
           img,
           video,
           audio,
-          canvas {
+          canvas,
+          object,
+          embed {
             display: none !important;
           }
 
 
           /*
-            Esconde também os contêineres
-            usados para vídeo/player.
+            Segurança extra contra
+            qualquer player restante.
           */
 
           [class*="youtube"],
@@ -310,29 +361,42 @@ module.exports = async function handler(req, res) {
           [id*="player"],
           [id*="Player"] {
             display: none !important;
+
+            width: 0 !important;
             height: 0 !important;
+
+            min-width: 0 !important;
             min-height: 0 !important;
+
+            max-width: 0 !important;
+            max-height: 0 !important;
+
             margin: 0 !important;
             padding: 0 !important;
+
             border: 0 !important;
+
+            background: transparent !important;
           }
 
 
-          /*
-            Se algum contêiner ficou vazio
-            após a remoção do vídeo,
-            ele também desaparece.
-          */
-
           div:empty,
           section:empty,
-          figure:empty {
+          figure:empty,
+          p:empty {
             display: none !important;
+
+            width: 0 !important;
             height: 0 !important;
+
             min-height: 0 !important;
+
             margin: 0 !important;
             padding: 0 !important;
+
             border: 0 !important;
+
+            background: transparent !important;
           }
 
 
@@ -343,6 +407,7 @@ module.exports = async function handler(req, res) {
             color: #292621;
             line-height: 1.3;
           }
+
 
           h1,
           h2 {
@@ -355,13 +420,16 @@ module.exports = async function handler(req, res) {
             margin-bottom: 12px;
           }
 
+
           h1 {
             font-size: 28px;
           }
 
+
           h2 {
             font-size: 24px;
           }
+
 
           h3,
           h4 {
@@ -369,21 +437,25 @@ module.exports = async function handler(req, res) {
             margin-top: 25px;
           }
 
+
           p,
           li {
             font-size: 17px;
             line-height: 1.75;
           }
 
+
           p {
             margin: 10px 0;
           }
+
 
           a {
             color: inherit;
             text-decoration: none;
             pointer-events: none;
           }
+
 
           sup {
             font-size: 11px;
@@ -429,11 +501,6 @@ module.exports = async function handler(req, res) {
       "text/html; charset=utf-8"
     );
 
-
-    /*
-      Temporariamente sem cache,
-      para podermos conferir a correção.
-    */
 
     res.setHeader(
       "Cache-Control",
