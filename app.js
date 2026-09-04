@@ -1,78 +1,97 @@
 let currentDate = new Date();
 
 const weekdays = [
-  "DOMINGO","SEGUNDA-FEIRA","TERÇA-FEIRA","QUARTA-FEIRA",
-  "QUINTA-FEIRA","SEXTA-FEIRA","SÁBADO"
+  "DOMINGO",
+  "SEGUNDA-FEIRA",
+  "TERÇA-FEIRA",
+  "QUARTA-FEIRA",
+  "QUINTA-FEIRA",
+  "SEXTA-FEIRA",
+  "SÁBADO"
 ];
 
-function formatDateBR(date){
+function formatDateBR(date) {
   return new Intl.DateTimeFormat("pt-BR", {
-    day:"numeric",
-    month:"long",
-    year:"numeric"
+    day: "numeric",
+    month: "long",
+    year: "numeric"
   }).format(date);
 }
 
-function isoDate(date){
+function isoDate(date) {
   return [
     date.getFullYear(),
-    String(date.getMonth()+1).padStart(2,"0"),
-    String(date.getDate()).padStart(2,"0")
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0")
   ].join("-");
 }
 
 const days = {
+
   "2026-08-31": {
-    celebration:"Segunda-feira da 22ª Semana do Tempo Comum",
-    meta:"Verde · Ano Litúrgico A · Ciclo ferial: Ano II",
-    prayerLabel:"Segunda-feira da Semana XXII · Tempo Comum · Ano Par"
+    celebration: "Segunda-feira da 22ª Semana do Tempo Comum",
+    meta: "Verde · Ano Litúrgico A · Ciclo ferial: Ano II",
+    prayerLabel: "Segunda-feira da Semana XXII · Tempo Comum · Ano Par"
   },
 
   "2026-09-01": {
-    celebration:"Terça-feira da 22ª Semana do Tempo Comum",
-    meta:"Verde · Ano Litúrgico A · Ciclo ferial: Ano II",
-    prayerLabel:"Terça-feira da Semana XXII · Tempo Comum · Ano Par"
+    celebration: "Terça-feira da 22ª Semana do Tempo Comum",
+    meta: "Verde · Ano Litúrgico A · Ciclo ferial: Ano II",
+    prayerLabel: "Terça-feira da Semana XXII · Tempo Comum · Ano Par"
   },
 
   "2026-09-02": {
-    celebration:"Quarta-feira da 22ª Semana do Tempo Comum",
-    meta:"Verde · Ano Litúrgico A · Ciclo ferial: Ano II",
-    prayerLabel:"Quarta-feira da Semana XXII · Tempo Comum · Ano Par"
+    celebration: "Quarta-feira da 22ª Semana do Tempo Comum",
+    meta: "Verde · Ano Litúrgico A · Ciclo ferial: Ano II",
+    prayerLabel: "Quarta-feira da Semana XXII · Tempo Comum · Ano Par"
   },
 
   "2026-09-03": {
-    celebration:"São Gregório Magno, Papa e Doutor da Igreja",
-    meta:"Branco · Ano Litúrgico A · Memória obrigatória",
-    prayerLabel:"3 de setembro · São Gregório Magno"
+    celebration: "São Gregório Magno, Papa e Doutor da Igreja",
+    meta: "Branco · Ano Litúrgico A · Memória obrigatória",
+    prayerLabel: "3 de setembro · São Gregório Magno"
   },
 
   "2026-09-04": {
-    celebration:"Sexta-feira da 22ª Semana do Tempo Comum",
-    meta:"Verde · Ano Litúrgico A · Ciclo ferial: Ano II",
-    prayerLabel:"Sexta-feira da Semana XXII · Tempo Comum · Ano Par"
+    celebration: "Sexta-feira da 22ª Semana do Tempo Comum",
+    meta: "Verde · Ano Litúrgico A · Ciclo ferial: Ano II",
+    prayerLabel: "Sexta-feira da Semana XXII · Tempo Comum · Ano Par"
   },
 
   "2026-09-05": {
-    celebration:"Sábado da 22ª Semana do Tempo Comum",
-    meta:"Verde · Ano Litúrgico A · Ciclo ferial: Ano II",
-    prayerLabel:"Sábado da Semana XXII · Tempo Comum · Ano Par"
+    celebration: "Sábado da 22ª Semana do Tempo Comum",
+    meta: "Verde · Ano Litúrgico A · Ciclo ferial: Ano II",
+    prayerLabel: "Sábado da Semana XXII · Tempo Comum · Ano Par"
+  },
+
+  "2026-09-06": {
+    celebration: "23º Domingo do Tempo Comum",
+    meta: "Verde · Ano Litúrgico A",
+    prayerLabel: "23º Domingo do Tempo Comum · Ano A"
   }
 };
 
-function renderLiturgia(iso){
+function renderLiturgia(iso) {
 
-  const liturgiaCard = document.getElementById("liturgia");
+  const liturgiaCard =
+    document.getElementById("liturgia");
 
-  if(!liturgiaCard) return;
+  if (!liturgiaCard) return;
 
-  const old = document.getElementById("liturgiaLive");
+  const old =
+    document.getElementById("liturgiaLive");
 
-  if(old) old.remove();
+  if (old) {
+    old.remove();
+  }
 
-  const wrapper = document.createElement("div");
+  const wrapper =
+    document.createElement("div");
+
   wrapper.id = "liturgiaLive";
 
-  const info = document.createElement("p");
+  const info =
+    document.createElement("p");
 
   info.style.color = "#746d64";
   info.style.lineHeight = "1.55";
@@ -82,42 +101,54 @@ function renderLiturgia(iso){
 
   wrapper.appendChild(info);
 
-  const iframe = document.createElement("iframe");
+  const iframe =
+    document.createElement("iframe");
 
   iframe.src =
-    "/api/liturgia?date=" + encodeURIComponent(iso);
+    "/api/liturgia?date=" +
+    encodeURIComponent(iso);
 
   iframe.title =
-    "Liturgia Diária oficial da CNBB";
+    "Liturgia Diária";
 
   iframe.loading = "lazy";
 
   iframe.style.width = "100%";
   iframe.style.height = "900px";
-  iframe.style.border = "1px solid #e9e0d5";
-  iframe.style.borderRadius = "12px";
-  iframe.style.background = "white";
+  iframe.style.border =
+    "1px solid #e9e0d5";
+  iframe.style.borderRadius =
+    "12px";
+  iframe.style.background =
+    "white";
 
   wrapper.appendChild(iframe);
 
   const placeholders =
-    liturgiaCard.querySelectorAll(".placeholder");
+    liturgiaCard.querySelectorAll(
+      ".placeholder"
+    );
 
-  placeholders.forEach(el => el.remove());
+  placeholders.forEach(
+    element => element.remove()
+  );
 
   liturgiaCard.appendChild(wrapper);
 }
 
-function render(){
+function render() {
 
-  const iso = isoDate(currentDate);
-  const data = days[iso];
+  const iso =
+    isoDate(currentDate);
 
-  document.getElementById("weekday").textContent =
-    weekdays[currentDate.getDay()];
+  const data =
+    days[iso];
 
-  document.getElementById("date").textContent =
-    formatDateBR(currentDate);
+  const weekday =
+    document.getElementById("weekday");
+
+  const date =
+    document.getElementById("date");
 
   const celebration =
     document.getElementById("celebration");
@@ -131,9 +162,15 @@ function render(){
   const pdfArea =
     document.getElementById("pdfArea");
 
+  weekday.textContent =
+    weekdays[currentDate.getDay()];
+
+  date.textContent =
+    formatDateBR(currentDate);
+
   pdfArea.innerHTML = "";
 
-  if(data){
+  if (data) {
 
     celebration.textContent =
       data.celebration;
@@ -157,15 +194,21 @@ function render(){
     iframe.title =
       "Oração Universal oficial do dia";
 
-    iframe.loading = "lazy";
+    iframe.loading =
+      "lazy";
 
-    pdfArea.appendChild(iframe);
+    pdfArea.appendChild(
+      iframe
+    );
 
     const fallback =
       document.createElement("p");
 
-    fallback.style.fontSize = "13px";
-    fallback.style.color = "#746d64";
+    fallback.style.fontSize =
+      "13px";
+
+    fallback.style.color =
+      "#746d64";
 
     fallback.innerHTML =
       'Se o visualizador não carregar, ' +
@@ -174,7 +217,9 @@ function render(){
       '" target="_blank" rel="noopener">' +
       'toque aqui para abrir somente a página oficial deste dia</a>.';
 
-    pdfArea.appendChild(fallback);
+    pdfArea.appendChild(
+      fallback
+    );
 
   } else {
 
@@ -193,33 +238,43 @@ function render(){
 
 document
   .getElementById("prevBtn")
-  .addEventListener("click", ()=>{
+  .addEventListener(
+    "click",
+    () => {
 
-    currentDate.setDate(
-      currentDate.getDate()-1
-    );
+      currentDate.setDate(
+        currentDate.getDate() - 1
+      );
 
-    render();
-  });
+      render();
+    }
+  );
 
 document
   .getElementById("nextBtn")
-  .addEventListener("click", ()=>{
+  .addEventListener(
+    "click",
+    () => {
 
-    currentDate.setDate(
-      currentDate.getDate()+1
-    );
+      currentDate.setDate(
+        currentDate.getDate() + 1
+      );
 
-    render();
-  });
+      render();
+    }
+  );
 
 document
   .getElementById("todayBtn")
-  .addEventListener("click", ()=>{
+  .addEventListener(
+    "click",
+    () => {
 
-    currentDate = new Date();
+      currentDate =
+        new Date();
 
-    render();
-  });
+      render();
+    }
+  );
 
 render();
