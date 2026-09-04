@@ -65,6 +65,61 @@ function getElements() {
 
 
 /* =========================
+   COR LITÚRGICA
+========================= */
+
+function liturgicalColor(colorName) {
+  const color =
+    String(colorName || "")
+      .trim()
+      .toLowerCase();
+
+  if (color === "verde") {
+    return {
+      background: "#5d8f67",
+      border: "#5d8f67"
+    };
+  }
+
+  if (color === "branco") {
+    return {
+      background: "#ffffff",
+      border: "#b9b3ab"
+    };
+  }
+
+  if (
+    color === "roxo" ||
+    color === "violeta"
+  ) {
+    return {
+      background: "#76508d",
+      border: "#76508d"
+    };
+  }
+
+  if (color === "vermelho") {
+    return {
+      background: "#b94a48",
+      border: "#b94a48"
+    };
+  }
+
+  if (color === "rosa") {
+    return {
+      background: "#c98b9e",
+      border: "#c98b9e"
+    };
+  }
+
+  return {
+    background: "#8a8279",
+    border: "#8a8279"
+  };
+}
+
+
+/* =========================
    CABEÇALHO AUTOMÁTICO
 ========================= */
 
@@ -94,10 +149,14 @@ async function renderHeader(date) {
 
 
   try {
-    const response = await fetch(
-      "/api/day?date=" +
-      encodeURIComponent(iso)
-    );
+    const response =
+      await fetch(
+        "/api/day?date=" +
+        encodeURIComponent(iso),
+        {
+          cache: "no-store"
+        }
+      );
 
     if (!response.ok) {
       throw new Error(
@@ -134,13 +193,83 @@ async function renderHeader(date) {
 
 
     if (els.meta) {
-      els.meta.textContent =
+      /*
+        Apaga o conteúdo anterior para
+        construirmos a bolinha + texto.
+      */
+
+      els.meta.innerHTML = "";
+
+
+      /*
+        BOLINHA LITÚRGICA
+      */
+
+      if (data.color) {
+        const dot =
+          document.createElement("span");
+
+        const colors =
+          liturgicalColor(
+            data.color
+          );
+
+        dot.style.display =
+          "inline-block";
+
+        dot.style.width =
+          "16px";
+
+        dot.style.height =
+          "16px";
+
+        dot.style.borderRadius =
+          "50%";
+
+        dot.style.background =
+          colors.background;
+
+        dot.style.border =
+          "1.5px solid " +
+          colors.border;
+
+        dot.style.marginRight =
+          "8px";
+
+        dot.style.verticalAlign =
+          "-2px";
+
+        dot.style.boxSizing =
+          "border-box";
+
+        els.meta.appendChild(
+          dot
+        );
+      }
+
+
+      /*
+        TEXTO:
+        Festa · Branco
+        ou
+        Verde · Ano A
+        etc.
+      */
+
+      const text =
+        document.createElement("span");
+
+      text.textContent =
         metaParts.length
           ? metaParts.join(" · ")
           : (
               data.season ||
               "Calendário litúrgico"
             );
+
+      els.meta.appendChild(
+        text
+      );
     }
 
   } catch (error) {
@@ -234,7 +363,9 @@ function renderLiturgia(date) {
   iframe.style.background =
     "#ffffff";
 
-  wrapper.appendChild(iframe);
+  wrapper.appendChild(
+    iframe
+  );
 
 
   const placeholders =
@@ -281,9 +412,17 @@ function renderPrayer(date) {
   const iframe =
     document.createElement("iframe");
 
+  /*
+    Acrescentamos a data como versão
+    para reduzir problemas de cache
+    durante os testes.
+  */
+
   iframe.src =
     "/api/prayer?date=" +
-    encodeURIComponent(iso);
+    encodeURIComponent(iso) +
+    "&v=" +
+    Date.now();
 
   iframe.title =
     "Oração dos Fiéis";
@@ -327,6 +466,8 @@ function renderPrayer(date) {
     'Se o visualizador não carregar, ' +
     '<a href="/api/prayer?date=' +
     encodeURIComponent(iso) +
+    '&v=' +
+    Date.now() +
     '" target="_blank" rel="noopener">' +
     'toque aqui para abrir a oração deste dia</a>.';
 
@@ -417,24 +558,15 @@ function preloadNextSevenDays() {
       isoDate(date);
 
 
-    /*
-      Pré-carrega os dados
-      do cabeçalho.
-    */
-
     fetch(
       "/api/day?date=" +
       encodeURIComponent(iso),
       {
         method: "GET",
-        cache: "force-cache"
+        cache: "no-store"
       }
     ).catch(() => {});
 
-
-    /*
-      Pré-carrega a Liturgia.
-    */
 
     fetch(
       "/api/liturgia?date=" +
@@ -447,17 +579,11 @@ function preloadNextSevenDays() {
 
 
     /*
-      Pré-carrega as Preces.
+      As preces ficam sem pré-cache
+      enquanto estamos testando,
+      para não guardar resultados
+      antigos ou incorretos.
     */
-
-    fetch(
-      "/api/prayer?date=" +
-      encodeURIComponent(iso),
-      {
-        method: "GET",
-        cache: "force-cache"
-      }
-    ).catch(() => {});
   }
 }
 
