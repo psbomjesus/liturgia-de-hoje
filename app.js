@@ -65,6 +65,105 @@ function getElements() {
 
 
 /* =========================
+   CABEÇALHO AUTOMÁTICO
+========================= */
+
+async function renderHeader(date) {
+  const els = getElements();
+  const iso = isoDate(date);
+
+  if (els.weekday) {
+    els.weekday.textContent =
+      weekdays[date.getDay()];
+  }
+
+  if (els.date) {
+    els.date.textContent =
+      formatDateBR(date);
+  }
+
+  if (els.celebration) {
+    els.celebration.textContent =
+      "Carregando celebração...";
+  }
+
+  if (els.meta) {
+    els.meta.textContent =
+      "Carregando dados litúrgicos...";
+  }
+
+
+  try {
+    const response = await fetch(
+      "/api/day?date=" +
+      encodeURIComponent(iso)
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        "Não foi possível carregar os dados litúrgicos."
+      );
+    }
+
+    const data =
+      await response.json();
+
+
+    if (els.celebration) {
+      els.celebration.textContent =
+        data.celebration ||
+        "Liturgia do dia";
+    }
+
+
+    const metaParts = [];
+
+    if (data.rank) {
+      metaParts.push(data.rank);
+    }
+
+    if (data.color) {
+      metaParts.push(data.color);
+    }
+
+    if (data.cycle) {
+      metaParts.push(
+        "Ano " + data.cycle
+      );
+    }
+
+
+    if (els.meta) {
+      els.meta.textContent =
+        metaParts.length
+          ? metaParts.join(" · ")
+          : (
+              data.season ||
+              "Calendário litúrgico"
+            );
+    }
+
+  } catch (error) {
+
+    console.error(
+      "Erro ao carregar cabeçalho:",
+      error
+    );
+
+    if (els.celebration) {
+      els.celebration.textContent =
+        "Liturgia do dia";
+    }
+
+    if (els.meta) {
+      els.meta.textContent =
+        "Dados litúrgicos indisponíveis";
+    }
+  }
+}
+
+
+/* =========================
    LITURGIA
 ========================= */
 
@@ -76,23 +175,30 @@ function renderLiturgia(date) {
   const iso = isoDate(date);
 
   const old =
-    document.getElementById("liturgiaLive");
+    document.getElementById(
+      "liturgiaLive"
+    );
 
   if (old) {
     old.remove();
   }
 
+
   const wrapper =
     document.createElement("div");
 
-  wrapper.id = "liturgiaLive";
+  wrapper.id =
+    "liturgiaLive";
 
 
   const info =
     document.createElement("p");
 
-  info.style.color = "#746d64";
-  info.style.lineHeight = "1.55";
+  info.style.color =
+    "#746d64";
+
+  info.style.lineHeight =
+    "1.55";
 
   info.textContent =
     "Liturgia do dia com textos litúrgicos brasileiros.";
@@ -110,10 +216,14 @@ function renderLiturgia(date) {
   iframe.title =
     "Liturgia do dia";
 
-  iframe.loading = "eager";
+  iframe.loading =
+    "eager";
 
-  iframe.style.width = "100%";
-  iframe.style.height = "1000px";
+  iframe.style.width =
+    "100%";
+
+  iframe.style.height =
+    "1000px";
 
   iframe.style.border =
     "1px solid #e9e0d5";
@@ -132,12 +242,16 @@ function renderLiturgia(date) {
       ".placeholder"
     );
 
-  placeholders.forEach(element => {
-    element.remove();
-  });
+  placeholders.forEach(
+    element => {
+      element.remove();
+    }
+  );
 
 
-  els.liturgiaCard.appendChild(wrapper);
+  els.liturgiaCard.appendChild(
+    wrapper
+  );
 }
 
 
@@ -150,9 +264,11 @@ function renderPrayer(date) {
 
   if (!els.pdfArea) return;
 
-  const iso = isoDate(date);
+  const iso =
+    isoDate(date);
 
-  els.pdfArea.innerHTML = "";
+  els.pdfArea.innerHTML =
+    "";
 
 
   if (els.prayerStatus) {
@@ -172,11 +288,14 @@ function renderPrayer(date) {
   iframe.title =
     "Oração dos Fiéis";
 
-  iframe.loading = "eager";
+  iframe.loading =
+    "eager";
 
-  iframe.style.width = "100%";
+  iframe.style.width =
+    "100%";
 
-  iframe.style.minHeight = "760px";
+  iframe.style.minHeight =
+    "760px";
 
   iframe.style.border =
     "1px solid #e9e0d5";
@@ -187,15 +306,22 @@ function renderPrayer(date) {
   iframe.style.background =
     "#ffffff";
 
-  els.pdfArea.appendChild(iframe);
+  els.pdfArea.appendChild(
+    iframe
+  );
 
 
   const fallback =
     document.createElement("p");
 
-  fallback.style.fontSize = "13px";
-  fallback.style.color = "#746d64";
-  fallback.style.lineHeight = "1.5";
+  fallback.style.fontSize =
+    "13px";
+
+  fallback.style.color =
+    "#746d64";
+
+  fallback.style.lineHeight =
+    "1.5";
 
   fallback.innerHTML =
     'Se o visualizador não carregar, ' +
@@ -204,47 +330,9 @@ function renderPrayer(date) {
     '" target="_blank" rel="noopener">' +
     'toque aqui para abrir a oração deste dia</a>.';
 
-  els.pdfArea.appendChild(fallback);
-}
-
-
-/* =========================
-   CABEÇALHO
-========================= */
-
-function renderHeader(date) {
-  const els = getElements();
-
-  if (els.weekday) {
-    els.weekday.textContent =
-      weekdays[date.getDay()];
-  }
-
-  if (els.date) {
-    els.date.textContent =
-      formatDateBR(date);
-  }
-
-
-  /*
-    A identificação completa da celebração,
-    cor, semana e ciclo será ligada ao
-    calendário litúrgico automático na
-    próxima etapa.
-
-    Aqui não usamos mais uma tabela
-    manual de datas.
-  */
-
-  if (els.celebration) {
-    els.celebration.textContent =
-      "Liturgia do dia";
-  }
-
-  if (els.meta) {
-    els.meta.textContent =
-      "Calendário litúrgico automático";
-  }
+  els.pdfArea.appendChild(
+    fallback
+  );
 }
 
 
@@ -282,10 +370,14 @@ function nextDay() {
 
 
 function goToday() {
-  currentDate = new Date();
+  currentDate =
+    new Date();
 
   currentDate.setHours(
-    12, 0, 0, 0
+    12,
+    0,
+    0,
+    0
   );
 
   render();
@@ -298,15 +390,22 @@ function goToday() {
 ========================= */
 
 function preloadNextSevenDays() {
-  const today = new Date();
+  const today =
+    new Date();
 
   today.setHours(
-    12, 0, 0, 0
+    12,
+    0,
+    0,
+    0
   );
 
 
-  for (let i = 0; i < 7; i++) {
-
+  for (
+    let i = 0;
+    i < 7;
+    i++
+  ) {
     const date =
       cloneDate(today);
 
@@ -316,6 +415,21 @@ function preloadNextSevenDays() {
 
     const iso =
       isoDate(date);
+
+
+    /*
+      Pré-carrega os dados
+      do cabeçalho.
+    */
+
+    fetch(
+      "/api/day?date=" +
+      encodeURIComponent(iso),
+      {
+        method: "GET",
+        cache: "force-cache"
+      }
+    ).catch(() => {});
 
 
     /*
@@ -333,11 +447,7 @@ function preloadNextSevenDays() {
 
 
     /*
-      Pré-carrega também as Preces.
-
-      Quando o novo prayer.js automático
-      estiver instalado, os sete dias
-      ficarão preparados juntos.
+      Pré-carrega as Preces.
     */
 
     fetch(
@@ -356,7 +466,9 @@ function preloadNextSevenDays() {
    BOTÕES
 ========================= */
 
-const els = getElements();
+const els =
+  getElements();
+
 
 if (els.prevBtn) {
   els.prevBtn.addEventListener(
@@ -387,6 +499,7 @@ if (els.todayBtn) {
 ========================= */
 
 render();
+
 
 setTimeout(() => {
   preloadNextSevenDays();
