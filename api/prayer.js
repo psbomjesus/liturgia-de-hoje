@@ -1081,7 +1081,7 @@ async function handler(req, res) {
 
     res.setHeader(
       "Cache-Control",
-      "public, max-age=3600, s-maxage=86400"
+      "no-store"
     );
 
 
