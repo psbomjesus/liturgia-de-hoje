@@ -29,72 +29,11 @@ module.exports = async function handler(req, res) {
 
     let html = await response.text();
 
-
-    /* =========================================
-       REMOVE BLOCOS DO YOUTUBE ANTES DE TUDO
-    ========================================= */
-
     /*
-      O Pocket Terço coloca vídeos no meio
-      da liturgia.
-
-      Não basta apagar somente o iframe,
-      porque o contêiner pode continuar
-      aparecendo como uma caixa ou barra.
-
-      Por isso removemos primeiro blocos
-      completos que contenham YouTube.
+      LIMPEZA BÁSICA
+      Mantemos a estrutura original
+      que já estava funcionando.
     */
-
-    const youtubeBlockPatterns = [
-
-      /<figure\b[^>]*>[\s\S]*?(?:youtube\.com|youtu\.be)[\s\S]*?<\/figure>/gi,
-
-      /<section\b[^>]*>[\s\S]*?(?:youtube\.com|youtu\.be)[\s\S]*?<\/section>/gi,
-
-      /<p\b[^>]*>[\s\S]*?(?:youtube\.com|youtu\.be)[\s\S]*?<\/p>/gi
-    ];
-
-    for (const pattern of youtubeBlockPatterns) {
-      html = html.replace(pattern, "");
-    }
-
-
-    /*
-      Remove DIVs que contenham diretamente
-      um iframe do YouTube.
-    */
-
-    html = html.replace(
-      /<div\b[^>]*>\s*<iframe\b[^>]*(?:youtube\.com|youtu\.be)[^>]*>[\s\S]*?<\/iframe>\s*<\/div>/gi,
-      ""
-    );
-
-
-    /*
-      Remove iframe do YouTube que ainda
-      tenha permanecido.
-    */
-
-    html = html.replace(
-      /<iframe\b[^>]*(?:youtube\.com|youtu\.be)[^>]*>[\s\S]*?<\/iframe>/gi,
-      ""
-    );
-
-
-    /*
-      Remove também URLs soltas do YouTube.
-    */
-
-    html = html.replace(
-      /https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\/[^\s<"']+/gi,
-      ""
-    );
-
-
-    /* =========================================
-       LIMPEZA GERAL
-    ========================================= */
 
     html = html
       .replace(
@@ -111,9 +50,10 @@ module.exports = async function handler(req, res) {
       );
 
 
-    /* =========================================
-       LOCALIZA A LITURGIA DA PALAVRA
-    ========================================= */
+    /*
+      LOCALIZA O INÍCIO
+      DA LITURGIA DA PALAVRA
+    */
 
     const startPatterns = [
       "Primeira Leitura",
@@ -140,6 +80,10 @@ module.exports = async function handler(req, res) {
     }
 
 
+    /*
+      LOCALIZA O FINAL
+    */
+
     const endPatterns = [
       "Antífona do Ofertório",
       "Sobre as Oferendas",
@@ -152,18 +96,17 @@ module.exports = async function handler(req, res) {
     for (const pattern of endPatterns) {
       const index = html.indexOf(pattern, start);
 
-      if (
-        index !== -1 &&
-        (end === -1 || index < end)
-      ) {
-        end = index;
+      if (index !== -1) {
+        if (end === -1 || index < end) {
+          end = index;
+        }
       }
     }
 
 
     /*
-      Preserva a tag do título
-      da Primeira Leitura.
+      Volta até o começo da tag
+      que contém a Primeira Leitura.
     */
 
     const tagStart =
@@ -191,9 +134,10 @@ module.exports = async function handler(req, res) {
       html.slice(start, end);
 
 
-    /* =========================================
-       REMOVE QUALQUER MÍDIA RESTANTE
-    ========================================= */
+    /*
+      REMOVE APENAS MÍDIAS
+      SEM ALTERAR A ESTRUTURA DO TEXTO
+    */
 
     liturgia = liturgia
       .replace(
@@ -218,61 +162,16 @@ module.exports = async function handler(req, res) {
       );
 
 
-    /* =========================================
-       REMOVE ESTILOS ORIGINAIS
-       DOS ELEMENTOS
-    ========================================= */
-
     /*
-      Isso impede que algum contêiner
-      que sobrou mantenha altura,
-      fundo azul ou proporção de vídeo.
-
-      Não altera o texto litúrgico.
+      REMOVE SOMENTE LINKS DO YOUTUBE
+      QUE POSSAM TER SOBRADO
     */
 
     liturgia = liturgia.replace(
-      /\sstyle=(["'])[\s\S]*?\1/gi,
+      /<a\b[^>]*href=["'][^"']*(?:youtube\.com|youtu\.be)[^"']*["'][^>]*>[\s\S]*?<\/a>/gi,
       ""
     );
 
-
-    /* =========================================
-       REMOVE ELEMENTOS VAZIOS
-    ========================================= */
-
-    /*
-      Fazemos várias passagens porque,
-      ao retirar um elemento interno,
-      o elemento pai também pode ficar vazio.
-    */
-
-    for (let i = 0; i < 10; i++) {
-
-      liturgia = liturgia
-        .replace(
-          /<div\b[^>]*>\s*(?:&nbsp;|<br\s*\/?>|\s)*<\/div>/gi,
-          ""
-        )
-        .replace(
-          /<section\b[^>]*>\s*(?:&nbsp;|<br\s*\/?>|\s)*<\/section>/gi,
-          ""
-        )
-        .replace(
-          /<figure\b[^>]*>\s*(?:&nbsp;|<br\s*\/?>|\s)*<\/figure>/gi,
-          ""
-        )
-        .replace(
-          /<p\b[^>]*>\s*(?:&nbsp;|<br\s*\/?>|\s)*<\/p>/gi,
-          ""
-        );
-
-    }
-
-
-    /* =========================================
-       PÁGINA FINAL
-    ========================================= */
 
     const page = `
       <!doctype html>
@@ -296,14 +195,12 @@ module.exports = async function handler(req, res) {
             box-sizing: border-box;
           }
 
-
           html,
           body {
             margin: 0;
             padding: 0;
             background: #ffffff;
           }
-
 
           body {
             font-family:
@@ -314,13 +211,11 @@ module.exports = async function handler(req, res) {
               sans-serif;
 
             color: #292621;
-
             line-height: 1.7;
 
             padding:
               12px 18px 30px 18px;
           }
-
 
           header,
           nav,
@@ -331,17 +226,18 @@ module.exports = async function handler(req, res) {
           iframe,
           img,
           video,
-          audio,
-          canvas,
-          object,
-          embed {
+          audio {
             display: none !important;
           }
 
 
           /*
-            Segurança extra contra
-            qualquer player restante.
+            CORREÇÃO DO BLOCO DE VÍDEO
+
+            Em vez de remover DIVs inteiras,
+            apenas escondemos elementos
+            claramente relacionados a vídeo,
+            player, embed ou YouTube.
           */
 
           [class*="youtube"],
@@ -361,41 +257,12 @@ module.exports = async function handler(req, res) {
           [id*="player"],
           [id*="Player"] {
             display: none !important;
-
-            width: 0 !important;
             height: 0 !important;
-
-            min-width: 0 !important;
             min-height: 0 !important;
-
-            max-width: 0 !important;
             max-height: 0 !important;
-
             margin: 0 !important;
             padding: 0 !important;
-
             border: 0 !important;
-
-            background: transparent !important;
-          }
-
-
-          div:empty,
-          section:empty,
-          figure:empty,
-          p:empty {
-            display: none !important;
-
-            width: 0 !important;
-            height: 0 !important;
-
-            min-height: 0 !important;
-
-            margin: 0 !important;
-            padding: 0 !important;
-
-            border: 0 !important;
-
             background: transparent !important;
           }
 
@@ -408,7 +275,6 @@ module.exports = async function handler(req, res) {
             line-height: 1.3;
           }
 
-
           h1,
           h2 {
             font-family:
@@ -420,16 +286,13 @@ module.exports = async function handler(req, res) {
             margin-bottom: 12px;
           }
 
-
           h1 {
             font-size: 28px;
           }
 
-
           h2 {
             font-size: 24px;
           }
-
 
           h3,
           h4 {
@@ -437,25 +300,21 @@ module.exports = async function handler(req, res) {
             margin-top: 25px;
           }
 
-
           p,
           li {
             font-size: 17px;
             line-height: 1.75;
           }
 
-
           p {
             margin: 10px 0;
           }
-
 
           a {
             color: inherit;
             text-decoration: none;
             pointer-events: none;
           }
-
 
           sup {
             font-size: 11px;
@@ -479,7 +338,6 @@ module.exports = async function handler(req, res) {
 
       </head>
 
-
       <body>
 
         ${liturgia}
@@ -501,12 +359,10 @@ module.exports = async function handler(req, res) {
       "text/html; charset=utf-8"
     );
 
-
     res.setHeader(
       "Cache-Control",
       "no-store"
     );
-
 
     res.status(200).send(page);
 
@@ -548,6 +404,5 @@ module.exports = async function handler(req, res) {
 
       </html>
     `);
-
   }
 };
