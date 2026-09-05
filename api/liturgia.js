@@ -32,8 +32,6 @@ module.exports = async function handler(req, res) {
 
     /*
       LIMPEZA BÁSICA
-      Mantemos a estrutura original
-      que já estava funcionando.
     */
 
     html = html
@@ -106,8 +104,8 @@ module.exports = async function handler(req, res) {
 
 
     /*
-      Volta até o começo da tag
-      que contém a Primeira Leitura.
+      Preserva a tag que contém
+      o título da Primeira Leitura.
     */
 
     const tagStart =
@@ -136,8 +134,7 @@ module.exports = async function handler(req, res) {
 
 
     /*
-      REMOVE APENAS MÍDIAS
-      SEM ALTERAR A ESTRUTURA DO TEXTO
+      REMOVE MÍDIAS
     */
 
     liturgia = liturgia
@@ -164,16 +161,10 @@ module.exports = async function handler(req, res) {
 
 
     /*
-      NOVA CORREÇÃO
+      REMOVE ESTILOS INLINE
 
-      Remove estilos inline vindos
-      da página original.
-
-      Isso mantém o texto e a estrutura,
-      mas elimina fundos, alturas,
-      proporções e outras características
-      visuais que podem ter pertencido
-      ao player de vídeo.
+      Isso evita que sobrem caixas
+      ou fundos do player.
     */
 
     liturgia = liturgia.replace(
@@ -189,7 +180,6 @@ module.exports = async function handler(req, res) {
 
     /*
       REMOVE LINKS DO YOUTUBE
-      QUE POSSAM TER SOBRADO
     */
 
     liturgia = liturgia.replace(
@@ -199,7 +189,31 @@ module.exports = async function handler(req, res) {
 
 
     /*
-      MONTA A PÁGINA LIMPA
+      REMOVE URL SOLTA DO YOUTUBE
+
+      Exemplo:
+      https://youtu.be/TlgtflceVJg
+    */
+
+    liturgia = liturgia.replace(
+      /https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\/[^\s<"'&]+/gi,
+      ""
+    );
+
+
+    /*
+      REMOVE PARÁGRAFOS QUE FIQUEM VAZIOS
+      APÓS A RETIRADA DA URL
+    */
+
+    liturgia = liturgia.replace(
+      /<p\b[^>]*>\s*(?:&nbsp;|\s|<br\s*\/?>)*<\/p>/gi,
+      ""
+    );
+
+
+    /*
+      MONTA A PÁGINA FINAL
     */
 
     const page = `
@@ -261,9 +275,8 @@ module.exports = async function handler(req, res) {
 
 
           /*
-            Segurança adicional:
-            esconde elementos claramente
-            relacionados a vídeo/player.
+            Segurança adicional
+            contra elementos de player.
           */
 
           [class*="youtube"],
@@ -385,17 +398,10 @@ module.exports = async function handler(req, res) {
       "text/html; charset=utf-8"
     );
 
-
-    /*
-      Sem cache enquanto testamos
-      esta correção.
-    */
-
     res.setHeader(
       "Cache-Control",
       "no-store"
     );
-
 
     res.status(200).send(page);
 
