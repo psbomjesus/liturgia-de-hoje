@@ -71,7 +71,6 @@ module.exports = async function handler(req, res) {
       }
     }
 
-
     if (start === -1) {
       throw new Error(
         "Não foi possível localizar a Primeira Leitura."
@@ -104,8 +103,7 @@ module.exports = async function handler(req, res) {
 
 
     /*
-      Preserva a tag que contém
-      o título da Primeira Leitura.
+      VOLTA ATÉ O COMEÇO DA TAG
     */
 
     const tagStart =
@@ -115,7 +113,6 @@ module.exports = async function handler(req, res) {
       tagStart !== -1
         ? tagStart
         : start;
-
 
     if (end === -1) {
       end = html.length;
@@ -162,9 +159,7 @@ module.exports = async function handler(req, res) {
 
     /*
       REMOVE ESTILOS INLINE
-
-      Isso evita que sobrem caixas
-      ou fundos do player.
+      QUE FORMAVAM O BLOCO DO VÍDEO
     */
 
     liturgia = liturgia.replace(
@@ -187,33 +182,73 @@ module.exports = async function handler(req, res) {
       ""
     );
 
-
     /*
-      REMOVE URL SOLTA DO YOUTUBE
-
-      Exemplo:
-      https://youtu.be/TlgtflceVJg
+      REMOVE URL DO YOUTUBE
+      CASO APAREÇA COMO TEXTO PURO
     */
 
     liturgia = liturgia.replace(
-      /https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\/[^\s<"'&]+/gi,
+      /https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\/[^\s<]+/gi,
       ""
     );
 
 
     /*
-      REMOVE PARÁGRAFOS QUE FIQUEM VAZIOS
-      APÓS A RETIRADA DA URL
+      ACRESCENTA O TÍTULO
+      "ACLAMAÇÃO AO EVANGELHO"
+
+      O título é apenas organizacional.
+      O texto litúrgico da aclamação
+      permanece exatamente como veio
+      da fonte.
     */
 
-    liturgia = liturgia.replace(
-      /<p\b[^>]*>\s*(?:&nbsp;|\s|<br\s*\/?>)*<\/p>/gi,
-      ""
-    );
+    const acclamationPatterns = [
+      /℟\.\s*Aleluia/i,
+      /R\.\s*Aleluia/i,
+      /Aleluia,\s*Aleluia/i
+    ];
+
+    let acclamationIndex = -1;
+
+    for (const pattern of acclamationPatterns) {
+      const match = liturgia.match(pattern);
+
+      if (match && typeof match.index === "number") {
+        acclamationIndex = match.index;
+        break;
+      }
+    }
+
+    if (acclamationIndex !== -1) {
+
+      const tagStart =
+        liturgia.lastIndexOf("<", acclamationIndex);
+
+      const insertAt =
+        tagStart !== -1
+          ? tagStart
+          : acclamationIndex;
+
+      const before =
+        liturgia.slice(0, insertAt);
+
+      const after =
+        liturgia.slice(insertAt);
+
+      liturgia =
+        before +
+        `
+          <h3 class="titulo-aclamacao">
+            Aclamação ao Evangelho
+          </h3>
+        ` +
+        after;
+    }
 
 
     /*
-      MONTA A PÁGINA FINAL
+      MONTA A PÁGINA LIMPA
     */
 
     const page = `
@@ -275,8 +310,8 @@ module.exports = async function handler(req, res) {
 
 
           /*
-            Segurança adicional
-            contra elementos de player.
+            ESCONDE EVENTUAIS
+            ELEMENTOS DE PLAYER
           */
 
           [class*="youtube"],
@@ -338,6 +373,27 @@ module.exports = async function handler(req, res) {
             font-size: 19px;
             margin-top: 25px;
           }
+
+
+          /*
+            TÍTULO DA ACLAMAÇÃO
+          */
+
+          .titulo-aclamacao {
+            font-family:
+              Georgia,
+              "Times New Roman",
+              serif;
+
+            font-size: 20px;
+            font-weight: 700;
+
+            margin-top: 30px;
+            margin-bottom: 12px;
+
+            color: #292621;
+          }
+
 
           p,
           li {
