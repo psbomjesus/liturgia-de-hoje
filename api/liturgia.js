@@ -182,6 +182,7 @@ module.exports = async function handler(req, res) {
       ""
     );
 
+
     /*
       REMOVE URL DO YOUTUBE
       CASO APAREÇA COMO TEXTO PURO
@@ -197,53 +198,74 @@ module.exports = async function handler(req, res) {
       ACRESCENTA O TÍTULO
       "ACLAMAÇÃO AO EVANGELHO"
 
-      O título é apenas organizacional.
-      O texto litúrgico da aclamação
-      permanece exatamente como veio
-      da fonte.
+      O título é colocado antes
+      do parágrafo inteiro onde
+      aparece o Aleluia.
+
+      Assim o símbolo ℟.
+      permanece junto da resposta.
     */
 
-    const acclamationPatterns = [
-      /℟\.\s*Aleluia/i,
-      /R\.\s*Aleluia/i,
-      /Aleluia,\s*Aleluia/i
-    ];
+    const aleluiaMatch =
+      liturgia.match(
+        /Aleluia,\s*Aleluia,\s*Aleluia/i
+      );
 
-    let acclamationIndex = -1;
+    if (
+      aleluiaMatch &&
+      typeof aleluiaMatch.index === "number"
+    ) {
 
-    for (const pattern of acclamationPatterns) {
-      const match = liturgia.match(pattern);
+      const aleluiaIndex =
+        aleluiaMatch.index;
 
-      if (match && typeof match.index === "number") {
-        acclamationIndex = match.index;
-        break;
+      /*
+        Primeiro tenta encontrar
+        o início do parágrafo.
+      */
+
+      let insertAt =
+        liturgia.lastIndexOf(
+          "<p",
+          aleluiaIndex
+        );
+
+      /*
+        Caso a fonte utilize outra tag,
+        procura o início do elemento
+        mais próximo.
+      */
+
+      if (insertAt === -1) {
+        insertAt =
+          liturgia.lastIndexOf(
+            "<",
+            aleluiaIndex
+          );
       }
-    }
 
-    if (acclamationIndex !== -1) {
+      if (insertAt !== -1) {
 
-      const tagStart =
-        liturgia.lastIndexOf("<", acclamationIndex);
+        const before =
+          liturgia.slice(
+            0,
+            insertAt
+          );
 
-      const insertAt =
-        tagStart !== -1
-          ? tagStart
-          : acclamationIndex;
+        const after =
+          liturgia.slice(
+            insertAt
+          );
 
-      const before =
-        liturgia.slice(0, insertAt);
-
-      const after =
-        liturgia.slice(insertAt);
-
-      liturgia =
-        before +
-        `
-          <h3 class="titulo-aclamacao">
-            Aclamação ao Evangelho
-          </h3>
-        ` +
-        after;
+        liturgia =
+          before +
+          `
+            <h3 class="titulo-aclamacao">
+              Aclamação ao Evangelho
+            </h3>
+          ` +
+          after;
+      }
     }
 
 
