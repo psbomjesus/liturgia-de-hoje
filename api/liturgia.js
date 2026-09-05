@@ -195,15 +195,15 @@ module.exports = async function handler(req, res) {
 
 
     /*
-      ACRESCENTA O TÍTULO
-      "ACLAMAÇÃO AO EVANGELHO"
+      ACLAMAÇÃO AO EVANGELHO
 
-      O título é colocado antes
-      do parágrafo inteiro onde
-      aparece o Aleluia.
+      Primeiro localizamos "Aleluia".
+      Depois procuramos o ℟. imediatamente
+      anterior a esse Aleluia.
 
-      Assim o símbolo ℟.
-      permanece junto da resposta.
+      Assim o título entra antes de todo
+      o bloco da aclamação e nunca antes
+      da última estrofe do Salmo.
     */
 
     const aleluiaMatch =
@@ -220,57 +220,112 @@ module.exports = async function handler(req, res) {
         aleluiaMatch.index;
 
       /*
-        Primeiro tenta encontrar
-        o início do parágrafo.
+        Olhamos apenas um pequeno trecho
+        imediatamente anterior ao Aleluia
+        para encontrar o ℟. correspondente.
       */
 
-      let insertAt =
-        liturgia.lastIndexOf(
-          "<p",
+      const searchStart =
+        Math.max(
+          0,
+          aleluiaIndex - 500
+        );
+
+      const trechoAnterior =
+        liturgia.slice(
+          searchStart,
           aleluiaIndex
         );
 
+      const respostaRegex =
+        /(?:℟|R)\.\s*(?:<[^>]*>\s*)*$/i;
+
+      const respostaMatch =
+        trechoAnterior.match(
+          respostaRegex
+        );
+
+      let respostaIndex =
+        aleluiaIndex;
+
+      if (
+        respostaMatch &&
+        typeof respostaMatch.index === "number"
+      ) {
+        respostaIndex =
+          searchStart +
+          respostaMatch.index;
+      }
+
+
       /*
-        Caso a fonte utilize outra tag,
-        procura o início do elemento
-        mais próximo.
+        Agora procura o início do bloco
+        HTML que contém esse ℟.
+
+        Consideramos apenas elementos
+        de bloco, para não cortar
+        <strong>, <span> etc.
+      */
+
+      const blockTags = [
+        "<p",
+        "<div",
+        "<section",
+        "<article",
+        "<li"
+      ];
+
+      let insertAt = -1;
+
+      for (const tag of blockTags) {
+
+        const index =
+          liturgia.lastIndexOf(
+            tag,
+            respostaIndex
+          );
+
+        if (index > insertAt) {
+          insertAt = index;
+        }
+      }
+
+
+      /*
+        Se não houver um bloco reconhecido,
+        coloca imediatamente antes do ℟.
       */
 
       if (insertAt === -1) {
         insertAt =
-          liturgia.lastIndexOf(
-            "<",
-            aleluiaIndex
-          );
+          respostaIndex;
       }
 
-      if (insertAt !== -1) {
 
-        const before =
-          liturgia.slice(
-            0,
-            insertAt
-          );
+      const before =
+        liturgia.slice(
+          0,
+          insertAt
+        );
 
-        const after =
-          liturgia.slice(
-            insertAt
-          );
+      const after =
+        liturgia.slice(
+          insertAt
+        );
 
-        liturgia =
-          before +
-          `
-            <h3 class="titulo-aclamacao">
-              Aclamação ao Evangelho
-            </h3>
-          ` +
-          after;
-      }
+      liturgia =
+        before +
+        `
+          <h3 class="titulo-aclamacao">
+            Aclamação ao Evangelho
+          </h3>
+        ` +
+        after;
     }
 
 
     /*
-      MONTA A PÁGINA LIMPA
+      MONTA A PÁGINA
     */
 
     const page = `
@@ -330,11 +385,6 @@ module.exports = async function handler(req, res) {
             display: none !important;
           }
 
-
-          /*
-            ESCONDE EVENTUAIS
-            ELEMENTOS DE PLAYER
-          */
 
           [class*="youtube"],
           [class*="Youtube"],
