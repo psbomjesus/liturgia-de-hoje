@@ -29,6 +29,7 @@ module.exports = async function handler(req, res) {
 
     let html = await response.text();
 
+
     /*
       LIMPEZA BÁSICA
       Mantemos a estrutura original
@@ -163,7 +164,31 @@ module.exports = async function handler(req, res) {
 
 
     /*
-      REMOVE SOMENTE LINKS DO YOUTUBE
+      NOVA CORREÇÃO
+
+      Remove estilos inline vindos
+      da página original.
+
+      Isso mantém o texto e a estrutura,
+      mas elimina fundos, alturas,
+      proporções e outras características
+      visuais que podem ter pertencido
+      ao player de vídeo.
+    */
+
+    liturgia = liturgia.replace(
+      /\sstyle\s*=\s*"[^"]*"/gi,
+      ""
+    );
+
+    liturgia = liturgia.replace(
+      /\sstyle\s*=\s*'[^']*'/gi,
+      ""
+    );
+
+
+    /*
+      REMOVE LINKS DO YOUTUBE
       QUE POSSAM TER SOBRADO
     */
 
@@ -172,6 +197,10 @@ module.exports = async function handler(req, res) {
       ""
     );
 
+
+    /*
+      MONTA A PÁGINA LIMPA
+    */
 
     const page = `
       <!doctype html>
@@ -232,12 +261,9 @@ module.exports = async function handler(req, res) {
 
 
           /*
-            CORREÇÃO DO BLOCO DE VÍDEO
-
-            Em vez de remover DIVs inteiras,
-            apenas escondemos elementos
-            claramente relacionados a vídeo,
-            player, embed ou YouTube.
+            Segurança adicional:
+            esconde elementos claramente
+            relacionados a vídeo/player.
           */
 
           [class*="youtube"],
@@ -359,10 +385,17 @@ module.exports = async function handler(req, res) {
       "text/html; charset=utf-8"
     );
 
+
+    /*
+      Sem cache enquanto testamos
+      esta correção.
+    */
+
     res.setHeader(
       "Cache-Control",
       "no-store"
     );
+
 
     res.status(200).send(page);
 
