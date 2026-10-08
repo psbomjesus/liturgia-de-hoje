@@ -501,33 +501,22 @@ function sundayCycle(date) {
    BAIXAR PDF
 ========================= */
 
-async function fetchPdf(url) { // Usa o PDF oficial guardado no GitHub
-  // para o Tempo Comum dos anos pares.
-
-  if (url === URLS.ferial.comumPar) {
-    const localFile = path.join(
-      process.cwd(),
-      "06UnivFerialSNLTCPar.pdf"
-    );
-
-    return await fs.readFile(localFile);
-  }
-  const response =
-    await fetch(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0"
-      }
-    });
-
-  if (!response.ok) {
-    throw new Error(
-      `PDF respondeu ${response.status}: ${url}`
-    );
-  }
-
-  return Buffer.from(
-    await response.arrayBuffer()
+async function fetchPdf(url) {
+  // Identifica o nome do PDF solicitado.
+  const filename = decodeURIComponent(
+    new URL(url).pathname.split("/").pop()
   );
+
+  // Procura o PDF na pasta principal do projeto.
+  const localFile = path.join(process.cwd(), filename);
+
+  try {
+    return await fs.readFile(localFile);
+  } catch (error) {
+    throw new Error(
+      `PDF não encontrado no projeto: ${filename}`
+    );
+  }
 }
 
 
