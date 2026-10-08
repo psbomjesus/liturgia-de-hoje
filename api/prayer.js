@@ -1,6 +1,7 @@
 const { PDFDocument } = require("pdf-lib");
 const pdfParse = require("pdf-parse");
-
+const fs = require("fs").promises;
+const path = require("path");
 const BASE =
   "https://liturgia.pt/oracaouniversal";
 
@@ -500,7 +501,17 @@ function sundayCycle(date) {
    BAIXAR PDF
 ========================= */
 
-async function fetchPdf(url) {
+async function fetchPdf(url) { // Usa o PDF oficial guardado no GitHub
+  // para o Tempo Comum dos anos pares.
+
+  if (url === URLS.ferial.comumPar) {
+    const localFile = path.join(
+      process.cwd(),
+      "06UnivFerialSNLTCPar.pdf"
+    );
+
+    return await fs.readFile(localFile);
+  }
   const response =
     await fetch(url, {
       headers: {
