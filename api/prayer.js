@@ -839,6 +839,29 @@ async function findSunday(
     await fetchPdf(url);
 
 
+  /*
+    CRISTO REI — último domingo do Tempo Comum.
+    O título da solenidade não traz necessariamente
+    um número de domingo. Procuramos pelo nome próprio
+    antes de aplicar a busca numérica habitual.
+  */
+  const normalizedCelebration = normalize(celebration);
+  if (
+    normalizedCelebration.includes("CRISTO REI") ||
+    normalizedCelebration.includes("REI DO UNIVERSO")
+  ) {
+    const pages = await extractPages(buffer);
+    const pageIndex = pages.findIndex((page) => {
+      const text = normalize(page || "");
+      return (
+        text.includes("REI DO UNIVERSO") ||
+        text.includes("CRISTO REI")
+      );
+    });
+
+    return { buffer, pageIndex };
+  }
+
   const number =
     getSundayNumber(
       celebration
